@@ -133,17 +133,18 @@ C'est la question fondatrice du dataset : les conditions météorologiques de l'
 - **Les vieux millésimes sont-ils mécaniquement mieux notés** du fait d'un biais de survie (seules les bouteilles d'exception sont encore notées aujourd'hui) ? Cette limite méthodologique sera-t-elle visible dans la distribution des notes par année ?
   
 #### 6 — Analyse avancée des effets climatiques
-  - **Existe-t-il des seuils critiques de température au-delà desquels la qualité du vin diminue fortement ?** Plutôt qu’une relation linéaire, peut-on observer un niveau optimal de température au-delà duquel la note chute ?
-  -**Les conditions climatiques des mois précédant la récolte ont-elles plus d’impact que celles du reste de l’année ?** Peut-on identifier des périodes critiques dans le cycle de maturation du raisin où le climat influence davantage la qualité finale ?
-     -**Les mêmes conditions climatiques produisent-elles des effets différents selon le type de vin ?** Par exemple, une forte chaleur estivale favorise-t-elle les vins rouges mais pénalise-t-elle les vins blancs ou effervescents ?
-    -**Certains types de vin sont-ils plus résistants aux conditions climatiques extrêmes ?** Peut-on observer que certains vins maintiennent une qualité stable malgré des variations importantes de température ou de précipitations ?
-
- ####   7 — Analyse des anomalies et des limites du modèle
-- **Existe-t-il des vins très bien notés malgré des conditions climatiques défavorables ?** Ces cas atypiques suggèrent-ils l’influence d’autres facteurs comme le savoir-faire, la réputation ou les techniques de vinification ?
-- **Le climat reste-t-il un facteur explicatif de la note lorsque l’on prend en compte le prix ?** Les vins chers sont-ils mieux notés indépendamment des conditions météorologiques, ce qui pourrait biaiser l’analyse ?
-- **Les régions présentant une forte variabilité climatique produisent-elles des vins moins constants en qualité ?** Peut-on observer un lien entre la stabilité du climat et la régularité des notes ?
-- **Existe-t-il réellement des "années idéales" où toutes les conditions climatiques sont optimales pour l’ensemble des types de vin ?** Ces années se traduisent-elles par une augmentation globale des notes ?
-- **Peut-on identifier des groupes de vins partageant des profils climatiques similaires ?** Ces groupes présentent-ils des niveaux de qualité comparables, indépendamment de leur région ou de leur type ?
+- **Existe-t-il des seuils critiques de température au-delà desquels la qualité du vin chute ?** Peut-on identifier des zones optimales de température et des points de rupture où la note diminue fortement, indiquant un effet non linéaire du climat sur la qualité ?
+- **Les conditions climatiques ont-elles des effets opposés selon le type de vin ?** Une même température ou un même niveau d’ensoleillement peut-il être bénéfique pour certains vins (ex. rouges) mais défavorable pour d’autres (ex. blancs) ?
+- **La stabilité du climat influence-t-elle la régularité de la qualité des vins ?** Les régions présentant une faible variabilité climatique produisent-elles des vins avec des notes plus homogènes d’une année à l’autre ?
+#### 7 — Analyse des interactions et des effets combinés
+- **Les effets combinés des variables climatiques expliquent-ils mieux la qualité du vin que chaque facteur pris individuellement ?** Une combinaison de température, précipitations et ensoleillement permet-elle de mieux prédire la note qu’une analyse univariée ?
+- **Existe-t-il des profils climatiques typiques associés à des vins de haute qualité ?** Peut-on identifier des configurations météorologiques récurrentes (par exemple : chaud et sec, ou tempéré et ensoleillé) qui produisent systématiquement de bonnes notes ?
+#### 8 — Analyse des anomalies et limites du modèle
+- **Existe-t-il des vins très bien notés malgré des conditions climatiques défavorables ?** Ces cas atypiques suggèrent-ils l’influence d’autres facteurs comme le savoir-faire, la réputation ou le prix ?
+- **Les notes attribuées aux vins sont-elles cohérentes avec les conditions climatiques observées ?** Peut-on identifier des incohérences où des conditions réputées idéales ne produisent pas de vins bien notés, ou inversement ?
+#### 9 — Analyse de la robustesse et de la sensibilité
+- **Certains types de vin sont-ils plus sensibles que d’autres aux variations climatiques ?** Peut-on mesurer la variabilité des notes en fonction des fluctuations climatiques pour identifier les vins les plus “robustes” ?
+- **Les conditions climatiques extrêmes ont-elles un impact disproportionné sur la qualité du vin ?** Les années exceptionnellement chaudes, froides ou humides entraînent-elles des variations plus importantes de la note que les années normales ?
 
 #### Points de vigilance
 
