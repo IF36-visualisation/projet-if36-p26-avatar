@@ -2,6 +2,22 @@
 
 > *"Le vin est le reflet du ciel, de la terre et du travail des hommes."*
 
+## Membres
+
+| L'équipe Avatar      |
+| -------------------- |
+| Samuel FANDIO NJIKAM |
+| Samella LEUKOUO      |
+| Fanta DEMBELE        |
+
+---
+
+## Sommaire
+
+- [Introduction](#introduction)
+    - [Données](#donnees)
+    - [Plan d'analyse](#plan-danalyse)
+
 ## Introduction
 
 ### Données
