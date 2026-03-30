@@ -125,6 +125,13 @@ C'est la question fondatrice du dataset : les conditions météorologiques de l'
 - **Y a-t-il une tendance temporelle dans les notes ou les conditions climatiques ?** Peut-on observer l'effet du réchauffement climatique sur les températures de croissance au fil des millésimes ?
 - **Les années climatiquement extrêmes** (ex. canicule 2003 en Europe) se distinguent-elles dans les données par des notes anormalement hautes ou basses ?
 
+#### 5 — Analyse temporelle des millésimes
+
+- **La qualité des vins s'est-elle améliorée au fil du temps ?** Peut-on observer une tendance haussière des notes moyennes par millésime entre 1961 et 2020, ou les notes restent-elles stables indépendamment de l'année ?
+- **Certains millésimes se distinguent-ils comme des "grandes années" universelles ?** Par exemple, l'année 2005 est réputée exceptionnelle en Bordeaux — cela se confirme-t-il dans les données toutes régions confondues, ou l'effet est-il purement local ?
+- **Le réchauffement climatique est-il visible dans les données météo ?** En traçant la température moyenne (`tavg`) par millésime et par région, peut-on observer une hausse progressive des températures entre les années 1960 et 2020 ?
+- **Les vieux millésimes sont-ils mécaniquement mieux notés** du fait d'un biais de survie (seules les bouteilles d'exception sont encore notées aujourd'hui) ? Cette limite méthodologique sera-t-elle visible dans la distribution des notes par année ?
+
 #### Points de vigilance
 
 - La **note est subjective** et agrégée sur des périodes différentes
