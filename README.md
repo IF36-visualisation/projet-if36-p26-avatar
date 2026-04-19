@@ -4,11 +4,12 @@
 
 ## Membres
 
-| L'équipe Avatar      |
-| -------------------- |
-| Samuel FANDIO NJIKAM |
-| Samella LEUKOUO      |
-| Fanta DEMBELE        |
+| L'équipe Avatar         |
+| --------------------    |
+| Samuel FANDIO NJIKAM    |
+| Samella LEUKOUO         |  
+| Fanta DEMBELE           |
+| Mohamed Mehdi TRABELSSI |
 
 ---
 
@@ -155,29 +156,29 @@ Notre analyse s'articule autour de **6 axes indépendants**, progressant du desc
 
 #### Axe 3 — Millésimes et effet du temps
 
-##### Q6 — La note moyenne des vins évolue-t-elle selon le millésime, et cet effet traduit-il un vieillissement réel ou un biais de survie ?
+##### Q6 — La note moyenne des vins tend-elle à diminuer sur les millésimes récents (2005–2019), et ce phénomène est-il homogène entre les types ?
 
-**Objectif :** Déterminer si les vieux millésimes sont mieux notés parce que les vins vieillis sont intrinsèquement meilleurs (*effet qualité*), ou parce que seules les bouteilles d'exception ont survécu et sont encore notées aujourd'hui (*biais de survie*). Ces deux explications sont opposées et conditionnent l'interprétation des analyses climatiques sur les anciens millésimes.
+**Objectif :** Observer si la qualité perçue des vins, mesurée par leur note moyenne, évolue au fil des millésimes récents. Les données montrent une concentration très forte sur 2005–2019 (plus de 13 000 vins sur cette période), ce qui en fait la fenêtre temporelle la mieux couverte et la plus fiable pour une analyse de tendance. On cherche à savoir si cette tendance est partagée par tous les types de vins ou si certains se distinguent.
 
-**Variables :** `Year`, `Rating`, `NumberOfRatings`, `type`
+**Variables :** `Year`, `Rating`, `type`
 
-**Graphique :** Line chart de la note moyenne par millésime (1990–2020) avec bande de confiance (`geom_ribbon`), facetté par `type`, complété d'un graphique du nombre d'observations par année
+**Graphique :** Line chart de la note moyenne par millésime (2005–2019) avec bande de confiance (`geom_ribbon`), facetté par `type`
 
-**Approche :** On calcule la note moyenne et le nombre d'observations par année et par type. On trace l'évolution temporelle avec une bande de confiance pour visualiser l'incertitude. Si les années anciennes cumulent très peu d'observations mais des notes très élevées, cela révèle un biais de survie. Ce constat sera utilisé pour borner les analyses climatiques aux millésimes récents (ex. après 1995) où les données sont plus denses et fiables.
+**Approche :** On agrège les notes par année et par type sur la période 2005–2019. On trace l'évolution avec une bande de confiance proportionnelle au nombre d'observations.
 
 ---
 
 #### Axe 4 — Climat et qualité : le cœur de la problématique
 
-##### Q7 — Quels mois de l'année de croissance ont la plus forte corrélation avec la note du vin ?
+##### Q7 — Sur l'ensemble du calendrier climatique annuel, quels mois et quels indicateurs météo sont les plus associés à la note du vin ?
 
-**Objectif :** Identifier les périodes climatiques clés du cycle de la vigne (floraison en mai-juin, véraison en juillet-août, vendanges en septembre) en cherchant lesquelles ont le plus d'impact statistique sur la note finale. Cette question est exploratoire et sert de guide pour les analyses suivantes.
+**Objectif :** Dresser une cartographie complète et sans a priori des corrélations entre les 60 variables météo mensuelles et la note du vin. L'objectif est exploratoire : plutôt que de tester une hypothèse précise, on laisse les données révéler quelles périodes de l'année climatique (pas nécessairement l'été) et quels indicateurs (température, ensoleillement, précipitations) sont les plus liés à la qualité perçue. Cette question sert de boussole pour les analyses suivantes.
 
 **Variables :** `Rating` et les 60 variables météo mensuelles (`Jan_tavg` à `Dec_tsun`)
 
-**Graphique :** Heatmap de corrélation, avec les 12 mois sur l'axe x et les 5 indicateurs météo (`tavg`, `tmin`, `tmax`, `prcp`, `tsun`) sur l'axe y, la couleur encodant le coefficient de corrélation avec `Rating`
+**Graphique :** Heatmap de corrélation, avec les 12 mois sur l'axe x et les 5 indicateurs météo (`tavg`, `tmin`, `tmax`, `prcp`, `tsun`) sur l'axe y, la couleur encodant le coefficient de corrélation de Pearson avec `Rating`
 
-**Approche :** On calcule le coefficient de corrélation de Pearson entre `Rating` et chacune des 60 variables météo. La heatmap permet de visualiser d'un coup d'œil quels mois et quels indicateurs sont les plus associés à la note. On s'attend à ce que l'été (juillet-août) et l'automne (septembre) ressortent comme les périodes les plus déterminantes, les mois hivernaux devant afficher des corrélations proches de zéro.
+**Approche :** On calcule le coefficient de corrélation de Pearson entre `Rating` et chacune des 60 variables météo. La heatmap permet de visualiser en un coup d'œil les zones de corrélation forte et faible sur l'ensemble du calendrier. On laisse les résultats guider l'interprétation plutôt que de confirmer une hypothèse préétablie, ce qui constitue l'intérêt principal de cette visualisation exploratoire.
 
 ##### Q8 — L'ensoleillement estival est-il le meilleur prédicteur de la note, et cet effet varie-t-il entre types de vins ?
 
@@ -189,39 +190,39 @@ Notre analyse s'articule autour de **6 axes indépendants**, progressant du desc
 
 **Approche :** On construit une variable synthétique `tsun_ete` comme moyenne de `Jul_tsun`, `Aug_tsun` et `Sep_tsun`. On trace la relation avec `Rating` séparément pour chaque type via un facettage. Des pentes différentes entre types confirmeraient que les vins blancs et rouges n'ont pas les mêmes besoins en ensoleillement. On notera également les cas atypiques (vins très bien notés malgré peu de soleil) qui suggèrent l'influence d'autres facteurs non capturés.
 
-##### Q9 — Les précipitations estivales nuisent-elles à la note du vin, et cet effet est-il linéaire ?
+##### Q9 — Les précipitations estivales ont-elles un effet négatif sur la note des vins effervescents, et comment cet effet se compare-t-il aux autres types ?
 
-**Objectif :** Tester une hypothèse œnologique bien établie. Un excès de pluie en été dilue la concentration des arômes et favorise les maladies de la vigne, dégradant la qualité. Cette question est distincte de Q7 car elle porte sur un mécanisme différent (excès d'eau vs. intensité lumineuse) et peut produire un effet *non linéaire* : un peu de pluie est nécessaire, trop est néfaste.
+**Objectif :** Examiner si les précipitations estivales influencent différemment la note selon le type de vin. Les vins effervescents, issus majoritairement de régions fraîches (Champagne, Crémant, Cava), sont réputés particulièrement sensibles à l'excès d'humidité qui nuit à la concentration des arômes. Cette question est distincte de Q8 (qui porte sur l'ensoleillement) car elle analyse un mécanisme différent (l'excès d'eau) et permet de comparer la sensibilité aux précipitations entre les 4 types de vins.
 
 **Variables :** `Jul_prcp`, `Aug_prcp`, `Sep_prcp`, `Rating`, `type`
 
-**Graphique :** Scatter plot avec `geom_smooth` en méthode *loess* (pour capturer une relation non linéaire), facetté par `type`
+**Graphique :** Scatter plot `prcp_ete` vs `Rating` avec `geom_smooth` (méthode *loess*), facetté par `type`, pour comparer visuellement les pentes et formes de relation entre types
 
-**Approche :** On construit une variable `prcp_ete` (somme des précipitations de juillet à septembre). On utilise une régression locale (loess) plutôt qu'une droite pour détecter un éventuel seuil : la note pourrait rester stable jusqu'à un certain niveau de pluie puis chuter. On compare ces seuils entre types pour identifier si certains cépages sont plus tolérants à l'humidité que d'autres.
+**Approche :** On construit une variable `prcp_ete` (somme des précipitations de juillet à septembre). On trace la relation avec `Rating` séparément pour chaque type via un facettage. 
 
 ---
 
 #### Axe 5 — Évolution climatique et grands millésimes
 
-##### Q10 — Peut-on observer une hausse des températures de croissance au fil des millésimes dans les données ?
+##### Q10 — La hausse des températures estivales liée au réchauffement climatique est-elle visible dans les régions viticoles méditerranéennes entre 2005 et 2019 ?
 
-**Objectif :** Vérifier si le réchauffement climatique est visible dans ce dataset à travers l'évolution des températures estivales par région et par année. Cette question porte *uniquement sur les variables météo*, sans impliquer la note; elle valide la cohérence du dataset avec les données climatiques officielles et donne de la crédibilité aux analyses de l'axe 4.
+**Objectif :** Vérifier si le réchauffement climatique laisse une trace mesurable dans les données météo du dataset, en se concentrant sur la zone méditerranéenne (latitude 35°–45°N) où le signal est le plus net et le plus documenté scientifiquement. Cette question porte *uniquement sur les variables météo*, sans impliquer la note; elle valide la cohérence du dataset avec les données climatiques officielles et donne de la crédibilité aux analyses de l'axe 4.
 
 **Variables :** `Year`, `Jul_tavg`, `Aug_tavg`, `Sep_tavg`, `lat`
 
-**Graphique :** Line chart de la température estivale moyenne par année (1990–2020) avec droite de tendance linéaire (`geom_smooth`, méthode *lm*), facetté par grande zone géographique (définie à partir de `lat`)
+**Graphique :** Line chart de la température estivale moyenne par année (2005–2019) pour les régions méditerranéennes (35°N < `lat` < 45°N), avec droite de tendance linéaire (`geom_smooth`, méthode *lm*) et bande de confiance
 
-**Approche :** On agrège les données par année et par zone géographique (nord/sud d'une latitude seuil de 45°N, séparant approximativement l'Europe du Nord de l'Europe méditerranéenne). On trace la tendance linéaire sur 30 ans et on vérifie si la pente est positive. Si le dataset est cohérent avec les données climatiques réelles, on devrait observer une hausse progressive des températures, ce qui validera les variables météo comme indicateurs fiables.
+**Approche :** On filtre les vins des régions situées entre 35° et 45° de latitude nord (Espagne, Sud de la France, Italie, Grèce — 6 523 vins sur la période). On agrège la température estivale moyenne (`tavg_ete`) par année.
 
-##### Q11 — Les années climatiquement exceptionnelles correspondent-elles à des millésimes exceptionnels dans les notes ?
+##### Q11 — Les vins chers sont-ils aussi les plus populaires, et cette relation entre prix et popularité se reflète-t-elle dans la note ?
 
-**Objectif :** Relier les analyses climatiques (axe 4) et temporelles (axe 3) en vérifiant si les années reconnues comme extrêmes (ex. canicule 2003, été frais 2013) produisent bien des anomalies de note dans le dataset. C'est un test de *validité externe* : si le lien climat↔note est réel, les grands millésimes viticoles historiques doivent être visibles.
+**Objectif :** Explorer la relation entre le positionnement tarifaire d'un vin (`Price`) et sa popularité auprès des consommateurs (`NumberOfRatings`), puis observer comment la note se distribue dans ces deux dimensions. Un vin peut être cher et très commenté (grand cru accessible), cher mais peu commenté (bouteille de niche ou de collection), abordable et populaire (bon rapport qualité-prix), ou abordable et discret. Cette question est distincte de Q3 (prix↔note) et de Q2 (fiabilité des notes) car elle croise trois variables sous un angle commercial et sociologique.
 
-**Variables :** `Year`, `Rating`, `Jul_tavg`, `Aug_tavg`, `Jul_tsun`, `Country`, `type`
+**Variables :** `Price`, `NumberOfRatings`, `Rating`, `type`
 
-**Graphique :** Bar chart des notes moyennes par millésime (2000–2019) pour les vins européens, avec annotation des années climatiquement remarquables (`geom_label`), superposé à une courbe de température estivale sur un axe secondaire
+**Graphique :** Scatter plot `log(Price)` vs `log(NumberOfRatings)`, coloré par `Rating`, facetté par `type` avec les axes médians tracés pour délimiter 4 quadrants (cher/populaire, cher/discret, abordable/populaire, abordable/discret)
 
-**Approche :** On calcule la note moyenne par millésime pour les vins d'Europe. On superpose la courbe de température estivale moyenne. On annote manuellement les années connues comme climatiquement exceptionnelles (2003, 2010, 2015). Une concordance entre pics de chaleur/ensoleillement et pics de note validerait l'hypothèse centrale du projet. Les discordances seront tout aussi commentées pour nuancer les conclusions.
+**Approche :** On applique une transformation logarithmique sur `Price` et `NumberOfRatings` pour corriger leurs distributions très asymétriques. On trace les médianes de chaque variable comme lignes de séparation, créant 4 quadrants naturels. La couleur encodant la note permet d'observer si les vins bien notés se concentrent dans un quadrant particulier.
 
 ---
 
@@ -236,6 +237,26 @@ Notre analyse s'articule autour de **6 axes indépendants**, progressant du desc
 **Graphique :** Carte géographique (`ggplot2` + `geom_point`) où chaque région est positionnée par `lat`/`lng`, colorée par note moyenne et dimensionnée par nombre de vins ; complétée d'un scatter plot `lat` vs `Rating` avec droite de régression
 
 **Approche :** On agrège les données par région pour obtenir la note moyenne et le nombre de vins. On projette chaque région sur une carte du monde pour révéler des patterns spatiaux visuels. Le scatter plot complémentaire `lat` vs `Rating` quantifie la tendance : les régions méditerranéennes (basse latitude, fort ensoleillement structurel) sont-elles systématiquement mieux notées que les régions septentrionales ? On contrôle par `type` pour isoler l'effet de la latitude de celui du type de vin produit dans chaque zone.
+
+##### Q13 — Le climat de l'année de croissance influence-t-il le prix du vin, comme il influence sa note ?
+
+**Objectif :** Tester si les conditions météorologiques estivales ont un effet sur le positionnement tarifaire du vin, en plus de leur effet sur la note. La note reflète la qualité perçue par les consommateurs, tandis que le prix est fixé par le producteur *avant* les avis (il intègre donc des anticipations de qualité, la réputation du domaine, et des logiques de marché). Si le climat influence la note mais pas le prix, cela suggère que le marché ne "pricifie" pas les millésimes climatiques de façon efficace.
+
+**Variables :** `Price`, `Jul_tsun`, `Aug_tsun`, `Jul_prcp`, `Rating`, `type`
+
+**Graphique :** Deux scatter plots côte à côte avec `geom_smooth` : `tsun_ete` vs `Rating` (à gauche) et `tsun_ete` vs `log(Price)` (à droite), facettés par `type`, pour comparer visuellement les deux relations
+
+**Approche :** On construit la même variable `tsun_ete` que dans Q8. On compare sa relation avec `Rating` et avec `log(Price)` via deux graphiques miroirs.
+
+##### Q14 — Certaines régions viticoles sont-elles plus régulières que d'autres d'une année à l'autre, et peut-on relier cette stabilité à leur profil climatique ?
+
+**Objectif :** Comparer les régions non plus sur leur note moyenne (Q4) mais sur leur *régularité* : une région peut être excellente en moyenne mais très capricieuse selon les millésimes, tandis qu'une autre produit des vins d'une qualité constante année après année. Cette dimension intéresse autant le consommateur (fiabilité d'achat) que le chercheur (lien stabilité climatique → stabilité qualitative). C'est une lecture complémentaire et distincte de Q4 : note moyenne vs. prévisibilité.
+
+**Variables :** `Region`, `Year`, `Rating`, `Jul_tavg`, `Aug_tavg`, `Country`, `type` ; variables construites : `std_rating_region` (écart-type des notes par région sur les millésimes disponibles), `std_tavg_region` (écart-type de la température estivale par région)
+
+**Graphique :** Scatter plot `std_tavg_region` vs `std_rating_region` avec les régions comme points colorés par `Country` et annotés pour les cas extrêmes ; complété d'un bar chart des 15 régions les plus stables vs les 15 plus capricieuses (classées par `std_rating_region`)
+
+**Approche :** On filtre les régions ayant au moins 5 millésimes distincts (259 régions exploitables dans le dataset). Pour chaque région, on calcule l'écart-type des notes par année (`std_rating_region`) et l'écart-type de la température estivale (`std_tavg_region`). Le scatter plot teste si variabilité climatique et variabilité des notes sont corrélées.
 
 ---
 
