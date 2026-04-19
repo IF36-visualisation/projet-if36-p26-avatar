@@ -141,11 +141,21 @@ Notre analyse s'articule autour de **6 axes indépendants**, progressant du desc
 
 **Approche :** On agrège le dataset par région pour calculer la note moyenne et le nombre de vins. On filtre les régions avec trop peu d'observations (seuil défini à partir de Q2) pour éviter les régions anecdotiques. Le bar chart horizontal permet de lire facilement les noms de régions souvent longs, et la couleur par pays révèle si les meilleures régions sont concentrées dans un même pays ou dispersées géographiquement.
 
+##### Q5 — Certains producteurs se distinguent-ils par une note systématiquement supérieure à celle de leur région, indépendamment du prix ?
+ 
+**Objectif :** Mesurer l'effet *domaine* sur la qualité, c'est-à-dire la part de la note qui s'explique par le savoir-faire du producteur plutôt que par sa région ou son prix. Une région peut afficher une note moyenne élevée simplement parce qu'un ou deux grands domaines tirent la moyenne vers le haut — cette question permet de détecter ce phénomène et de distinguer l'excellence d'un terroir de celle d'un producteur.
+ 
+**Variables :** `Winery`, `Region`, `Rating`, `Price`, `type`
+ 
+**Graphique :** Dot plot des 20 producteurs dont l'écart entre leur note moyenne et la note moyenne de leur région est le plus élevé, coloré par `type`, avec barres d'erreur représentant l'intervalle de confiance
+ 
+**Approche :** Pour chaque vin, on calcule l'écart entre sa note et la note moyenne de sa région (`Rating - mean_rating_region`). On agrège ensuite par `Winery` pour obtenir l'écart moyen par producteur, filtré sur ceux ayant au moins 10 vins notés. Un écart positif élevé indique un producteur qui surperforme structurellement son terroir. Le dot plot avec intervalles de confiance permet de distinguer les producteurs dont la surperformance est statistiquement solide de ceux dont l'écart est dû à un trop faible nombre d'observations.
+
 ---
 
 #### Axe 3 — Millésimes et effet du temps
 
-##### Q5 — La note moyenne des vins évolue-t-elle selon le millésime, et cet effet traduit-il un vieillissement réel ou un biais de survie ?
+##### Q6 — La note moyenne des vins évolue-t-elle selon le millésime, et cet effet traduit-il un vieillissement réel ou un biais de survie ?
 
 **Objectif :** Déterminer si les vieux millésimes sont mieux notés parce que les vins vieillis sont intrinsèquement meilleurs (*effet qualité*), ou parce que seules les bouteilles d'exception ont survécu et sont encore notées aujourd'hui (*biais de survie*). Ces deux explications sont opposées et conditionnent l'interprétation des analyses climatiques sur les anciens millésimes.
 
@@ -159,7 +169,7 @@ Notre analyse s'articule autour de **6 axes indépendants**, progressant du desc
 
 #### Axe 4 — Climat et qualité : le cœur de la problématique
 
-##### Q6 — Quels mois de l'année de croissance ont la plus forte corrélation avec la note du vin ?
+##### Q7 — Quels mois de l'année de croissance ont la plus forte corrélation avec la note du vin ?
 
 **Objectif :** Identifier les périodes climatiques clés du cycle de la vigne (floraison en mai-juin, véraison en juillet-août, vendanges en septembre) en cherchant lesquelles ont le plus d'impact statistique sur la note finale. Cette question est exploratoire et sert de guide pour les analyses suivantes.
 
@@ -169,7 +179,7 @@ Notre analyse s'articule autour de **6 axes indépendants**, progressant du desc
 
 **Approche :** On calcule le coefficient de corrélation de Pearson entre `Rating` et chacune des 60 variables météo. La heatmap permet de visualiser d'un coup d'œil quels mois et quels indicateurs sont les plus associés à la note. On s'attend à ce que l'été (juillet-août) et l'automne (septembre) ressortent comme les périodes les plus déterminantes, les mois hivernaux devant afficher des corrélations proches de zéro.
 
-##### Q7 — L'ensoleillement estival est-il le meilleur prédicteur de la note, et cet effet varie-t-il entre types de vins ?
+##### Q8 — L'ensoleillement estival est-il le meilleur prédicteur de la note, et cet effet varie-t-il entre types de vins ?
 
 **Objectif :** Approfondir le résultat de Q6 sur l'indicateur météo le plus corrélé à la note (l'ensoleillement estival, hypothèse œnologique classique). On cherche ici à savoir si cet effet est universel ou propre à certains types, ce qui révèlerait des exigences climatiques différentes selon les cépages.
 
@@ -179,7 +189,7 @@ Notre analyse s'articule autour de **6 axes indépendants**, progressant du desc
 
 **Approche :** On construit une variable synthétique `tsun_ete` comme moyenne de `Jul_tsun`, `Aug_tsun` et `Sep_tsun`. On trace la relation avec `Rating` séparément pour chaque type via un facettage. Des pentes différentes entre types confirmeraient que les vins blancs et rouges n'ont pas les mêmes besoins en ensoleillement. On notera également les cas atypiques (vins très bien notés malgré peu de soleil) qui suggèrent l'influence d'autres facteurs non capturés.
 
-##### Q8 — Les précipitations estivales nuisent-elles à la note du vin, et cet effet est-il linéaire ?
+##### Q9 — Les précipitations estivales nuisent-elles à la note du vin, et cet effet est-il linéaire ?
 
 **Objectif :** Tester une hypothèse œnologique bien établie. Un excès de pluie en été dilue la concentration des arômes et favorise les maladies de la vigne, dégradant la qualité. Cette question est distincte de Q7 car elle porte sur un mécanisme différent (excès d'eau vs. intensité lumineuse) et peut produire un effet *non linéaire* : un peu de pluie est nécessaire, trop est néfaste.
 
@@ -193,7 +203,7 @@ Notre analyse s'articule autour de **6 axes indépendants**, progressant du desc
 
 #### Axe 5 — Évolution climatique et grands millésimes
 
-##### Q9 — Peut-on observer une hausse des températures de croissance au fil des millésimes dans les données ?
+##### Q10 — Peut-on observer une hausse des températures de croissance au fil des millésimes dans les données ?
 
 **Objectif :** Vérifier si le réchauffement climatique est visible dans ce dataset à travers l'évolution des températures estivales par région et par année. Cette question porte *uniquement sur les variables météo*, sans impliquer la note; elle valide la cohérence du dataset avec les données climatiques officielles et donne de la crédibilité aux analyses de l'axe 4.
 
@@ -203,7 +213,7 @@ Notre analyse s'articule autour de **6 axes indépendants**, progressant du desc
 
 **Approche :** On agrège les données par année et par zone géographique (nord/sud d'une latitude seuil de 45°N, séparant approximativement l'Europe du Nord de l'Europe méditerranéenne). On trace la tendance linéaire sur 30 ans et on vérifie si la pente est positive. Si le dataset est cohérent avec les données climatiques réelles, on devrait observer une hausse progressive des températures, ce qui validera les variables météo comme indicateurs fiables.
 
-##### Q10 — Les années climatiquement exceptionnelles correspondent-elles à des millésimes exceptionnels dans les notes ?
+##### Q11 — Les années climatiquement exceptionnelles correspondent-elles à des millésimes exceptionnels dans les notes ?
 
 **Objectif :** Relier les analyses climatiques (axe 4) et temporelles (axe 3) en vérifiant si les années reconnues comme extrêmes (ex. canicule 2003, été frais 2013) produisent bien des anomalies de note dans le dataset. C'est un test de *validité externe* : si le lien climat↔note est réel, les grands millésimes viticoles historiques doivent être visibles.
 
@@ -217,7 +227,7 @@ Notre analyse s'articule autour de **6 axes indépendants**, progressant du desc
 
 #### Axe 6 — Géographie et profil climatique structurel des régions
 
-##### Q11 — La latitude d'une région viticole influence-t-elle la qualité structurelle de ses vins, indépendamment des variations annuelles ?
+##### Q12 — La latitude d'une région viticole influence-t-elle la qualité structurelle de ses vins, indépendamment des variations annuelles ?
 
 **Objectif :** Explorer si la position géographique d'une région (qui détermine *structurellement* son ensoleillement et ses températures moyennes) est associée à la qualité moyenne des vins produits. Cet axe est fondamentalement distinct des précédents : au lieu d'analyser l'effet d'une *année particulière*, on cherche un effet *permanent* lié à la géographie; indépendant du millésime.
 
