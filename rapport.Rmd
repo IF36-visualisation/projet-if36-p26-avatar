@@ -446,10 +446,12 @@ Le prix d’un vin est souvent associé à sa qualité, mais cette relation n’
 
 On s’attend globalement à une relation positive entre le prix et la note, mais avec des différences selon les catégories. Les vins rouges et effervescents devraient montrer une corrélation plus marquée, tandis que les blancs et les rosés pourraient présenter une relation plus faible ou plus dispersée.
 ```
-wines_clean <- df_clean %>%
+{r q3_price_rating, fig.width=10, fig.height=6}
+
+df_clean <- wines %>%
   filter(!is.na(Price), !is.na(Rating))
 
-ggplot(wines_clean, aes(x = Price, y = Rating, color = type)) +
+ggplot(df_clean, aes(x = Price, y = Rating, color = type)) +
   geom_point(alpha = 0.4) +
   scale_x_log10() +
   geom_smooth(method = "lm", se = FALSE) +
@@ -465,6 +467,7 @@ ggplot(wines_clean, aes(x = Price, y = Rating, color = type)) +
     plot.title    = element_text(face = "bold", size = 13),
     plot.subtitle = element_text(size = 10, color = "grey40")
   )
+
 
 ```
 **Analyse**
