@@ -140,7 +140,7 @@ Pour chacun des **12 mois** (Jan à Dec), 5 indicateurs climatiques sont renseig
 
 ### Plan d'analyse
 
-Notre analyse s'articule autour de **6 axes indépendants**, progressant du descriptif vers l'analytique et l'explicatif. Chaque question est conçue pour éclairer un aspect distinct du dataset, avec des variables, des graphiques et une approche propres.
+Notre analyse s'articule autour de **7 axes indépendants**, progressant du descriptif vers l'analytique et l'explicatif. Chaque question est conçue pour éclairer un aspect distinct du dataset, avec des variables, des graphiques et une approche propres.
 
 #### Axe 1 — Distributions et structure
 
