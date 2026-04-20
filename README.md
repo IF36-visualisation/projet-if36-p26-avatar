@@ -112,7 +112,7 @@ Notre analyse s'articule autour de **7 axes indépendants**, progressant du desc
 
 **Objectif :** Identifier un biais potentiel majeur : une note de 4.5 basée sur 30 avis est très différente d'une note de 4.5 basée sur 2 000 avis. Cette question définit un seuil de fiabilité que nous appliquerons comme filtre dans les analyses suivantes.
 
-**Variables :** `NumberOfRatings`, `Rating`, `type`
+**Variables :** `NumberOfRatings`, `Rating`
 
 **Graphique :** Boxplot des distributions de Rating par tranche de nombre d'avis (25–49, 50–99, 100–199, 200–499, 500–999, 1 000+)
 
