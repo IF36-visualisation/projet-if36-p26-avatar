@@ -438,13 +438,13 @@ Le boxplot confirme l'intuition de départ. Les deux premières tranches (25–4
 
 La tranche 1000+ présente une boîte légèrement plus large. Non pas par manque de fiabilité, mais par un biais de sélection inverse : les vins accumulant autant d'avis sont les grands noms très médiatisés (Champagnes de prestige, premiers crus bordelais), des bouteilles qui polarisent les opinions entre amateurs convaincus et consommateurs qui les jugent surévaluées. C'est un phénomène distinct du bruit statistique observé à gauche du seuil.
 
-Axe 2 — Prix, popularité et qualité
-Q3 — Existe-t-il une corrélation entre le prix et la note, et varie-t-elle selon le type de vin ?
 
-Le prix d’un vin est souvent perçu comme un indicateur de sa qualité, mais cette relation est loin d’être systématique. Certains vins peuvent être très chers sans être particulièrement mieux notés, tandis que d’autres offrent un excellent niveau de qualité pour un prix modéré. Il est donc essentiel d’analyser si une véritable corrélation existe entre le prix et la note, et surtout si cette relation varie selon le type de vin (rouge, blanc, rosé, effervescent).
+## Axe 2 — Prix, popularité et qualité
+### Q3 — Existe-t-il une corrélation entre le prix et la note, et varie-t-elle selon le type de vin ?
 
-On s’attend à observer une relation positive globale entre prix et note, mais avec des intensités différentes selon les catégories. Les vins rouges et effervescents pourraient présenter une corrélation plus marquée, tandis que les blancs et rosés pourraient montrer une relation plus faible ou plus dispersée.
+Le prix d’un vin est souvent associé à sa qualité, mais cette relation n’est pas toujours évidente dans la réalité. Certains vins très chers ne sont pas forcément mieux notés, tandis que d’autres offrent une excellente qualité pour un prix bien plus accessible. Il est donc intéressant de vérifier s’il existe réellement un lien entre le prix et la note, et surtout si ce lien varie selon le type de vin (rouge, blanc, rosé, effervescent).
 
+On s’attend globalement à une relation positive entre le prix et la note, mais avec des différences selon les catégories. Les vins rouges et effervescents devraient montrer une corrélation plus marquée, tandis que les blancs et les rosés pourraient présenter une relation plus faible ou plus dispersée.
 ```
 wines_clean <- df_clean %>%
   filter(!is.na(Price), !is.na(Rating))
@@ -467,15 +467,13 @@ ggplot(wines_clean, aes(x = Price, y = Rating, color = type)) +
   )
 
 ```
-Analyse
+**Analyse**
 
-Les résultats montrent une relation globalement positive entre le prix et la note, confirmant partiellement l’hypothèse selon laquelle les vins plus chers tendent à être mieux notés. Cependant, cette relation reste modérée et très dépendante du type de vin.
+On observe une relation globalement positive entre le prix et la note des vins, ce qui confirme en partie l’idée intuitive selon laquelle les vins les plus chers sont aussi mieux notés. Cependant, cette relation reste assez modérée et surtout différente selon le type de vin.
 
-Les vins rouges présentent la corrélation la plus visible entre prix et note, avec une tendance ascendante plus marquée. Cela peut s’expliquer par la forte segmentation du marché des vins rouges, allant des bouteilles d’entrée de gamme jusqu’aux grands crus prestigieux très valorisés.
+Les vins rouges montrent la tendance la plus claire : plus le prix augmente, plus la note a tendance à augmenter également. Cela peut s’expliquer par le fait que les vins rouges couvrent une gamme de qualité et de prix très large, allant de vins simples à des grands crus très prestigieux.
 
-Les vins blancs et rosés montrent une relation beaucoup plus faible, avec une dispersion importante des points, suggérant que le prix n’est pas un bon prédicteur de la qualité perçue dans ces catégories.
+Pour les vins blancs et rosés, la relation est beaucoup moins nette. Les points sont très dispersés, ce qui suggère que le prix n’est pas un bon indicateur de la qualité perçue dans ces catégories.
+Les vins effervescents se situent entre les deux : on observe une tendance positive, mais elle est influencée par quelques vins très haut de gamme qui tirent la relation vers le haut.
 
-Les vins effervescents présentent une structure intermédiaire, avec une tendance positive mais influencée par quelques observations extrêmes correspondant à des champagnes haut de gamme.
-
-Enfin, la forte dispersion des points montre que le prix seul ne suffit pas à expliquer la qualité d’un vin, ce qui souligne l’importance d’intégrer d’autres facteurs (région, millésime, conditions climatiques) dans les analyses suivantes.
-
+Globalement, on remarque que le prix ne suffit pas à expliquer la qualité d’un vin. Cela montre qu’il faudra prendre en compte d’autres facteurs comme la région, le millésime ou encore les conditions climatiques pour mieux comprendre ce qui influence réellement la note.
