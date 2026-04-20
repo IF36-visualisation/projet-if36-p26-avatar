@@ -445,8 +445,7 @@ La tranche 1000+ présente une boîte légèrement plus large. Non pas par manqu
 Le prix d’un vin est souvent associé à sa qualité, mais cette relation n’est pas toujours évidente dans la réalité. Certains vins très chers ne sont pas forcément mieux notés, tandis que d’autres offrent une excellente qualité pour un prix bien plus accessible. Il est donc intéressant de vérifier s’il existe réellement un lien entre le prix et la note, et surtout si ce lien varie selon le type de vin (rouge, blanc, rosé, effervescent).
 
 On s’attend globalement à une relation positive entre le prix et la note, mais avec des différences selon les catégories. Les vins rouges et effervescents devraient montrer une corrélation plus marquée, tandis que les blancs et les rosés pourraient présenter une relation plus faible ou plus dispersée.
-```
-{r q3_price_rating, fig.width=10, fig.height=6}
+```{r q3_price_rating, fig.width=10, fig.height=6}
 
 df_clean <- wines %>%
   filter(!is.na(Price), !is.na(Rating))
