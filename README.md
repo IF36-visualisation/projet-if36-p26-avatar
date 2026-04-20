@@ -120,7 +120,7 @@ Notre analyse s'articule autour de **6 axes indépendants**, progressant du desc
 
 ---
 
-#### Axe 2 — Prix et qualité : le prix fait-il le vin ?
+#### Axe 2 — Prix, popularité et qualité
 
 ##### Q3 — Existe-t-il une corrélation entre le prix et la note, et est-elle uniforme entre les types de vins ?
 
@@ -142,35 +142,89 @@ Notre analyse s'articule autour de **6 axes indépendants**, progressant du desc
 
 **Approche :** On agrège le dataset par région pour calculer la note moyenne et le nombre de vins. On filtre les régions avec trop peu d'observations (seuil défini à partir de Q2) pour éviter les régions anecdotiques. Le bar chart horizontal permet de lire facilement les noms de régions souvent longs, et la couleur par pays révèle si les meilleures régions sont concentrées dans un même pays ou dispersées géographiquement.
 
-##### Q5 — Certains producteurs se distinguent-ils par une note systématiquement supérieure à celle de leur région, indépendamment du prix ?
+##### Q5 — Certains producteurs se distinguent-ils par une note systématiquement supérieure à celle de leur région ?
  
-**Objectif :** Mesurer l'effet *domaine* sur la qualité, c'est-à-dire la part de la note qui s'explique par le savoir-faire du producteur plutôt que par sa région ou son prix. Une région peut afficher une note moyenne élevée simplement parce qu'un ou deux grands domaines tirent la moyenne vers le haut — cette question permet de détecter ce phénomène et de distinguer l'excellence d'un terroir de celle d'un producteur.
+**Objectif :** Mesurer l'effet *domaine* sur la qualité, c'est-à-dire la part de la note qui s'explique par le savoir-faire du producteur plutôt que par son terroir. Une région peut afficher une note moyenne élevée simplement parce qu'un ou deux grands domaines tirent la moyenne vers le haut — cette question permet de détecter ce phénomène et de distinguer l'excellence d'un terroir de celle d'un producteur.
  
-**Variables :** `Winery`, `Region`, `Rating`, `Price`, `type`
+**Variables :** `Winery`, `Region`, `Rating`, `type`
  
 **Graphique :** Dot plot des 20 producteurs dont l'écart entre leur note moyenne et la note moyenne de leur région est le plus élevé, coloré par `type`, avec barres d'erreur représentant l'intervalle de confiance
  
 **Approche :** Pour chaque vin, on calcule l'écart entre sa note et la note moyenne de sa région (`Rating - mean_rating_region`). On agrège ensuite par `Winery` pour obtenir l'écart moyen par producteur, filtré sur ceux ayant au moins 10 vins notés. Un écart positif élevé indique un producteur qui surperforme structurellement son terroir. Le dot plot avec intervalles de confiance permet de distinguer les producteurs dont la surperformance est statistiquement solide de ceux dont l'écart est dû à un trop faible nombre d'observations.
 
+##### Q6 — Les vins chers sont-ils aussi les plus populaires, et cette relation se reflète-t-elle dans la note ?
+ 
+**Objectif :** Explorer la relation entre positionnement tarifaire (`Price`) et popularité (`NumberOfRatings`), puis observer comment la note se distribue dans ces deux dimensions.
+ 
+**Variables :** `Price`, `NumberOfRating`, `Rating`, `type`
+ 
+**Graphique :** Scatter plot `log(Price)` vs `log(NumberOfRatings)`, coloré par `Rating`, avec lignes médianes délimitant 4 quadrants, facetté par `type`
+ 
+**Approche :** On applique des transformations logarithmiques sur les deux axes.
+
 ---
 
-#### Axe 3 — Millésimes et effet du temps
+#### Axe 3 — Profil géographique et comparaison internationale
+ 
+##### Q7 — Quels pays produisent les vins les mieux notés, et à quel prix ?
+ 
+**Objectif :** Comparer les grands pays producteurs (12 pays avec ≥ 100 vins) sur leur positionnement simultané en note et en prix. Cette question adopte une granularité nationale, qui revèle des stratégies de marché différentes : la France produit cher (médiane 27€) là où le Portugal produit abordable (11€) pour des notes similaires.
+ 
+**Variables :** `Country`, `Rating`, `Price`, `type`
+ 
+**Graphique :** Scatter plot des pays (`price_med` en x, `rating_med` en y), avec des points dimensionnés par nombre de vins et colorés par continent, avec annotation des noms de pays
+ 
+**Approche :** On agrège par pays (filtre ≥ 100 vins, 12 pays exploitables). Chaque pays devient un point sur le graphique prix/note. On identifiera les pays à fort rapport qualité/prix (Portugal, Espagne, Chili) vs. les pays premium (France, États-Unis).
+ 
+##### Q8 — Quel type de vin offre le meilleur rapport qualité/prix, et dans quels pays ce rapport est-il le plus favorable ?
+ 
+**Objectif :** Construire un indicateur synthétique de rapport qualité/prix (`Rating / log(Price)`) pour comparer les types de vins et les pays de production sur une dimension unique. Question qui combine prix et note en un seul score et le compare entre groupes.
+ 
+**Variables :** `Rating`, `Price`, `type`, `Country`
+ 
+**Graphique :** Bar chart double : d'abord par `type`, puis par `Country` (top 8 pays), ce qui montrerait le score qualité/prix moyen avec barres d'erreur
+ 
+**Approche :** On construit `qp_ratio = Rating / log(Price + 1)` (qp = qualité_prix).
+ 
+##### Q9 — La latitude d'une région viticole influence-t-elle la qualité structurelle de ses vins ?
+ 
+**Objectif :** Explorer si la position géographique d'une région (qui détermine structurellement son ensoleillement et ses températures moyennes) est associée à la qualité moyenne des vins produits, indépendamment des variations annuelles.
+ 
+**Variables :** `lat`, `lng`, `Rating`, `Country`, `type`
+ 
+**Graphique :** Carte géographique (`ggplot2` + `geom_point`) où chaque région est positionnée par `lat`/`lng`, colorée par note moyenne et dimensionnée par nombre de vins ; complétée d'un scatter plot `lat` vs `Rating` avec droite de régression
+ 
+**Approche :** On agrège les données par région pour obtenir la note moyenne et le nombre de vins. On projette chaque région sur une carte du monde pour révéler des patterns spatiaux visuels. Le scatter plot complémentaire `lat` vs `Rating` quantifie la tendance. On contrôle par `type` pour isoler l'effet de la latitude de celui du type de vin produit dans chaque zone.
+ 
+---
 
-##### Q6 — La note moyenne des vins tend-elle à diminuer sur les millésimes récents (2005–2019), et ce phénomène est-il homogène entre les types ?
+#### Axe 4 — Millésimes et effet du temps
 
-**Objectif :** Observer si la qualité perçue des vins, mesurée par leur note moyenne, évolue au fil des millésimes récents. Les données montrent une concentration très forte sur 2005–2019 (plus de 13 000 vins sur cette période), ce qui en fait la fenêtre temporelle la mieux couverte et la plus fiable pour une analyse de tendance. On cherche à savoir si cette tendance est partagée par tous les types de vins ou si certains se distinguent.
+##### Q10 — La note moyenne des vins a-t-elle évolué sur la période (2005–2019), et ce phénomène est-il homogène entre les types ?
+
+**Objectif :** Observer si la qualité perçue des vins, mesurée par leur note moyenne, évolue au fil des millésimes récents. Et la tendance d'évolution est partagée par tous les types de vins ou si certains se distinguent.
 
 **Variables :** `Year`, `Rating`, `type`
 
 **Graphique :** Line chart de la note moyenne par millésime (2005–2019) avec bande de confiance (`geom_ribbon`), facetté par `type`
 
-**Approche :** On agrège les notes par année et par type sur la période 2005–2019. On trace l'évolution avec une bande de confiance proportionnelle au nombre d'observations.
+**Approche :** On agrège les notes par année et par type sur la période 2005–2019. On trace l'évolution avec une bande de confiance proportionnelle au nombre d'observations. On compare les pentes entre types pour voir si certains résistent mieux à cette tendance que d'autres.
+
+##### Q11 — Certaines régions viticoles sont-elles plus régulières que d'autres d'une année à l'autre ?
+ 
+**Objectif :** Comparer les régions non plus sur leur note moyenne (comme en Q4) mais sur leur *régularité* : une région peut être excellente en moyenne mais capricieuse selon les millésimes, tandis qu'une autre produit des vins d'une qualité constante. 
+ 
+**Variables :** `Region`, `Year`, `Rating`, `Country` — variable construite : `std_rating_region`
+ 
+**Graphique :** Bar chart des 15 régions les plus stables vs les 15 plus capricieuses (classées par `std_rating_region`), coloré par `Country`
+ 
+**Approche :** On filtre les régions ayant ≥ 5 millésimes distincts. Pour chaque région, on calcule l'écart-type des notes par année. Le bar chart comparatif révèle quelles régions (et quels pays) produisent les vins les plus prévisibles vs. les plus variables d'une année à l'autre.
 
 ---
 
-#### Axe 4 — Climat et qualité : le cœur de la problématique
+#### Axe 5 — Climat et qualité : le cœur de la problématique
 
-##### Q7 — Sur l'ensemble du calendrier climatique annuel, quels mois et quels indicateurs météo sont les plus associés à la note du vin ?
+##### Q12 — Sur l'ensemble du calendrier climatique annuel, quels mois et quels indicateurs météo sont les plus associés à la note du vin ?
 
 **Objectif :** Dresser une cartographie complète et sans a priori des corrélations entre les 60 variables météo mensuelles et la note du vin. L'objectif est exploratoire : plutôt que de tester une hypothèse précise, on laisse les données révéler quelles périodes de l'année climatique (pas nécessairement l'été) et quels indicateurs (température, ensoleillement, précipitations) sont les plus liés à la qualité perçue. Cette question sert de boussole pour les analyses suivantes.
 
@@ -178,21 +232,21 @@ Notre analyse s'articule autour de **6 axes indépendants**, progressant du desc
 
 **Graphique :** Heatmap de corrélation, avec les 12 mois sur l'axe x et les 5 indicateurs météo (`tavg`, `tmin`, `tmax`, `prcp`, `tsun`) sur l'axe y, la couleur encodant le coefficient de corrélation de Pearson avec `Rating`
 
-**Approche :** On calcule le coefficient de corrélation de Pearson entre `Rating` et chacune des 60 variables météo. La heatmap permet de visualiser en un coup d'œil les zones de corrélation forte et faible sur l'ensemble du calendrier. On laisse les résultats guider l'interprétation plutôt que de confirmer une hypothèse préétablie, ce qui constitue l'intérêt principal de cette visualisation exploratoire.
+**Approche :** On calcule le coefficient de corrélation de Pearson entre `Rating` et chacune des 60 variables météo. La heatmap permet de visualiser en un coup d'œil les zones de corrélation forte et faible sur l'ensemble du calendrier. On laisse les résultats guider l'interprétation plutôt que de confirmer une hypothèse préétablie.
 
-##### Q8 — L'ensoleillement estival est-il le meilleur prédicteur de la note, et cet effet varie-t-il entre types de vins ?
+##### Q13 — L'ensoleillement estival prédit-il mieux la note que l'ensoleillement printanier, et cet effet varie-t-il selon le type de vin ?
 
-**Objectif :** Approfondir le résultat de Q6 sur l'indicateur météo le plus corrélé à la note (l'ensoleillement estival, hypothèse œnologique classique). On cherche ici à savoir si cet effet est universel ou propre à certains types, ce qui révèlerait des exigences climatiques différentes selon les cépages.
+**Objectif :** Comparer le pouvoir prédictif de deux périodes climatiques distinctes (le printemps (floraison de la vigne, avril-juin) et l'été (maturation des raisins, juillet-septembre)) sur la note finale. 
 
-**Variables :** `Jul_tsun`, `Aug_tsun`, `Sep_tsun`, `Rating`, `type`
+**Variables :** `Apr_tsun`, `May_tsun`, `Jun_tsun`, `Jul_tsun`, `Aug_tsun`, `Sep_tsun`, `Rating`, `type`
 
-**Graphique :** Scatter plot de `tsun_ete` (variable construite) vs `Rating`, avec `geom_smooth` par type, facetté par `type`
+**Graphique :** Scatter plot facetté par `type` avec deux courbes `geom_smooth` superposées — une pour `tsun_print` (printemps) et une pour `tsun_ete` (été) — colorées différemment
 
-**Approche :** On construit une variable synthétique `tsun_ete` comme moyenne de `Jul_tsun`, `Aug_tsun` et `Sep_tsun`. On trace la relation avec `Rating` séparément pour chaque type via un facettage. Des pentes différentes entre types confirmeraient que les vins blancs et rouges n'ont pas les mêmes besoins en ensoleillement. On notera également les cas atypiques (vins très bien notés malgré peu de soleil) qui suggèrent l'influence d'autres facteurs non capturés.
+**Approche :** On construit `tsun_print` (moyenne avril-juin) et `tsun_ete` (moyenne juillet-septembre). On trace les deux relations sur le même graphique par type. La comparaison des pentes révèle quelle période compte le plus pour chaque type de vin. Les effervescents devraient montrer un printemps plus déterminant, contrairement aux rouges.
 
-##### Q9 — Les précipitations estivales ont-elles un effet négatif sur la note des vins effervescents, et comment cet effet se compare-t-il aux autres types ?
+##### Q14 — Les précipitations estivales ont-elles un effet négatif sur la note des vins effervescents, et comment cet effet se compare-t-il aux autres types ?
 
-**Objectif :** Examiner si les précipitations estivales influencent différemment la note selon le type de vin. Les vins effervescents, issus majoritairement de régions fraîches (Champagne, Crémant, Cava), sont réputés particulièrement sensibles à l'excès d'humidité qui nuit à la concentration des arômes. Cette question est distincte de Q8 (qui porte sur l'ensoleillement) car elle analyse un mécanisme différent (l'excès d'eau) et permet de comparer la sensibilité aux précipitations entre les 4 types de vins.
+**Objectif :** Examiner si les précipitations estivales influencent différemment la note selon le type de vin. Les vins effervescents, issus majoritairement de régions fraîches (Champagne, Crémant, Cava), sont réputés particulièrement sensibles à l'excès d'humidité qui nuit à la concentration des arômes. Cette question analyse un mécanisme différent (l'excès d'eau) et permet de comparer la sensibilité aux précipitations entre les 4 types de vins.
 
 **Variables :** `Jul_prcp`, `Aug_prcp`, `Sep_prcp`, `Rating`, `type`
 
@@ -200,11 +254,21 @@ Notre analyse s'articule autour de **6 axes indépendants**, progressant du desc
 
 **Approche :** On construit une variable `prcp_ete` (somme des précipitations de juillet à septembre). On trace la relation avec `Rating` séparément pour chaque type via un facettage. 
 
+##### Q15 — Une température hivernale plus froide est-elle associée à de meilleures notes, particulièrement pour les vins blancs ?
+ 
+**Objectif :** Explorer l'effet des températures hivernales sur la qualité du vin. Question distincte des axes estivaux car elle porte sur le repos végétatif de la vigne (décembre-février).
+ 
+**Variables :** `Dec_tavg`, `Jan_tavg`, `Feb_tavg`, `Rating`, `type`
+ 
+**Graphique :** Scatter plot `tavg_hiver` vs `Rating` avec `geom_smooth` par type, facetté par `type`
+ 
+**Approche :** On construit `tavg_hiver` (moyenne décembre-février). On compare la relation avec `Rating` entre types.
+
 ---
 
-#### Axe 5 — Évolution climatique et grands millésimes
+#### Axe 6 — Évolution climatique
 
-##### Q10 — La hausse des températures estivales liée au réchauffement climatique est-elle visible dans les régions viticoles méditerranéennes entre 2005 et 2019 ?
+##### Q16 — La hausse des températures estivales liée au réchauffement climatique est-elle visible dans les régions viticoles méditerranéennes entre 2005 et 2019 ?
 
 **Objectif :** Vérifier si le réchauffement climatique laisse une trace mesurable dans les données météo du dataset, en se concentrant sur la zone méditerranéenne (latitude 35°–45°N) où le signal est le plus net et le plus documenté scientifiquement. Cette question porte *uniquement sur les variables météo*, sans impliquer la note; elle valide la cohérence du dataset avec les données climatiques officielles et donne de la crédibilité aux analyses de l'axe 4.
 
@@ -212,52 +276,52 @@ Notre analyse s'articule autour de **6 axes indépendants**, progressant du desc
 
 **Graphique :** Line chart de la température estivale moyenne par année (2005–2019) pour les régions méditerranéennes (35°N < `lat` < 45°N), avec droite de tendance linéaire (`geom_smooth`, méthode *lm*) et bande de confiance
 
-**Approche :** On filtre les vins des régions situées entre 35° et 45° de latitude nord (Espagne, Sud de la France, Italie, Grèce — 6 523 vins sur la période). On agrège la température estivale moyenne (`tavg_ete`) par année.
-
-##### Q11 — Les vins chers sont-ils aussi les plus populaires, et cette relation entre prix et popularité se reflète-t-elle dans la note ?
-
-**Objectif :** Explorer la relation entre le positionnement tarifaire d'un vin (`Price`) et sa popularité auprès des consommateurs (`NumberOfRatings`), puis observer comment la note se distribue dans ces deux dimensions. Un vin peut être cher et très commenté (grand cru accessible), cher mais peu commenté (bouteille de niche ou de collection), abordable et populaire (bon rapport qualité-prix), ou abordable et discret. Cette question est distincte de Q3 (prix↔note) et de Q2 (fiabilité des notes) car elle croise trois variables sous un angle commercial et sociologique.
-
-**Variables :** `Price`, `NumberOfRatings`, `Rating`, `type`
-
-**Graphique :** Scatter plot `log(Price)` vs `log(NumberOfRatings)`, coloré par `Rating`, facetté par `type` avec les axes médians tracés pour délimiter 4 quadrants (cher/populaire, cher/discret, abordable/populaire, abordable/discret)
-
-**Approche :** On applique une transformation logarithmique sur `Price` et `NumberOfRatings` pour corriger leurs distributions très asymétriques. On trace les médianes de chaque variable comme lignes de séparation, créant 4 quadrants naturels. La couleur encodant la note permet d'observer si les vins bien notés se concentrent dans un quadrant particulier.
+**Approche :** On filtre les vins des régions situées entre 35° et 45° de latitude nord (Espagne, Sud de la France, Italie, Grèce). On agrège la température estivale moyenne (`tavg_ete`) par année.
 
 ---
 
-#### Axe 6 — Géographie et profil climatique structurel des régions
+#### Axe 7 — Structure et diversité du marché viticole
+ 
+##### Q17 — Quel est le profil de diversité géographique de chaque type de vin, et comment cela se reflète-t-il dans leurs gammes de prix ?
+ 
+**Objectif :** Comparer les 4 types de vins sur leur empreinte géographique (nombre de pays et de régions couverts) et leur positionnement tarifaire.
+ 
+**Variables :** `type`, `Country`, `Region`, `Price`
+ 
+**Graphique :** Graphique à bulles (`geom_point`) avec le nombre de pays en x, le nombre de régions en y, la taille des bulles proportionnelle au prix médian, et la couleur encodant le type ; complété d'un bar chart des prix médians par type
+ 
+**Approche :** On agrège par type pour obtenir le nombre de pays distincts, de régions distinctes et le prix médian. Le graphique à bulles positionne chaque type dans l'espace diversité/concentration.
 
-##### Q12 — La latitude d'une région viticole influence-t-elle la qualité structurelle de ses vins, indépendamment des variations annuelles ?
+##### Q18 — La variabilité des notes au sein d'un même pays reflète-t-elle une hétérogénéité de production ou une richesse de terroirs ?
+ 
+**Objectif :** Comparer les pays non sur leur note moyenne (comme en Q7) mais sur leur *dispersion* interne (`std` des notes). Un pays avec une forte dispersion produit à la fois de très bons et de très mauvais vins (profil hétérogène), tandis qu'un pays homogène maintient un niveau constant.
+ 
+**Variables :** `Country`, `Rating`, `type`
+ 
+**Graphique :** Bar chart horizontal des pays (≥ 100 vins) classés par écart-type des notes, avec la note moyenne annotée sur chaque barre, coloré par continent
+ 
+**Approche :** On calcule la note moyenne et l'écart-type par pays. On trie par écart-type décroissant. On annote la note moyenne sur chaque barre pour lire simultanément qualité moyenne et régularité. Les pays "surprises" (bonne moyenne + forte dispersion) seront les plus intéressants à commenter.
 
-**Objectif :** Explorer si la position géographique d'une région (qui détermine *structurellement* son ensoleillement et ses températures moyennes) est associée à la qualité moyenne des vins produits. Cet axe est fondamentalement distinct des précédents : au lieu d'analyser l'effet d'une *année particulière*, on cherche un effet *permanent* lié à la géographie; indépendant du millésime.
+##### Q19 — Quelles régions surperforment en note tout en restant moins chères que la moyenne du pays ?
+ 
+**Objectif :** Identifier les régions qui combinent deux avantages : une note supérieure à la moyenne nationale ET un prix inférieur à la médiane nationale. Ce sont les "pépites" du dataset, des terroirs d'excellence accessibles. Question qui croise note, prix et ancrage géographique.
+ 
+**Variables :** `Region`, `Country`, `Rating`, `Price`
+ 
+**Graphique :** Scatter plot des régions (≥ 15 vins) avec `ecart_note_pays` en x et `ecart_prix_pays` en y, annoté pour les régions dans le quadrant "mieux notées + moins chères", coloré par `Country`
+ 
+**Approche :** Pour chaque région, on calcule l'écart à la note moyenne nationale et l'écart au prix médian national. On projette chaque région sur le plan (écart_note, écart_prix). Le quadrant supérieur gauche (meilleure note, prix inférieur) identifie les pépites.
 
-**Variables :** `lat`, `lng`, `Rating`, `Country`, `type`
-
-**Graphique :** Carte géographique (`ggplot2` + `geom_point`) où chaque région est positionnée par `lat`/`lng`, colorée par note moyenne et dimensionnée par nombre de vins ; complétée d'un scatter plot `lat` vs `Rating` avec droite de régression
-
-**Approche :** On agrège les données par région pour obtenir la note moyenne et le nombre de vins. On projette chaque région sur une carte du monde pour révéler des patterns spatiaux visuels. Le scatter plot complémentaire `lat` vs `Rating` quantifie la tendance : les régions méditerranéennes (basse latitude, fort ensoleillement structurel) sont-elles systématiquement mieux notées que les régions septentrionales ? On contrôle par `type` pour isoler l'effet de la latitude de celui du type de vin produit dans chaque zone.
-
-##### Q13 — Le climat de l'année de croissance influence-t-il le prix du vin, comme il influence sa note ?
-
-**Objectif :** Tester si les conditions météorologiques estivales ont un effet sur le positionnement tarifaire du vin, en plus de leur effet sur la note. La note reflète la qualité perçue par les consommateurs, tandis que le prix est fixé par le producteur *avant* les avis (il intègre donc des anticipations de qualité, la réputation du domaine, et des logiques de marché). Si le climat influence la note mais pas le prix, cela suggère que le marché ne "pricifie" pas les millésimes climatiques de façon efficace.
-
-**Variables :** `Price`, `Jul_tsun`, `Aug_tsun`, `Jul_prcp`, `Rating`, `type`
-
-**Graphique :** Deux scatter plots côte à côte avec `geom_smooth` : `tsun_ete` vs `Rating` (à gauche) et `tsun_ete` vs `log(Price)` (à droite), facettés par `type`, pour comparer visuellement les deux relations
-
-**Approche :** On construit la même variable `tsun_ete` que dans Q8. On compare sa relation avec `Rating` et avec `log(Price)` via deux graphiques miroirs.
-
-##### Q14 — Certaines régions viticoles sont-elles plus régulières que d'autres d'une année à l'autre, et peut-on relier cette stabilité à leur profil climatique ?
-
-**Objectif :** Comparer les régions non plus sur leur note moyenne (Q4) mais sur leur *régularité* : une région peut être excellente en moyenne mais très capricieuse selon les millésimes, tandis qu'une autre produit des vins d'une qualité constante année après année. Cette dimension intéresse autant le consommateur (fiabilité d'achat) que le chercheur (lien stabilité climatique → stabilité qualitative). C'est une lecture complémentaire et distincte de Q4 : note moyenne vs. prévisibilité.
-
-**Variables :** `Region`, `Year`, `Rating`, `Jul_tavg`, `Aug_tavg`, `Country`, `type` ; variables construites : `std_rating_region` (écart-type des notes par région sur les millésimes disponibles), `std_tavg_region` (écart-type de la température estivale par région)
-
-**Graphique :** Scatter plot `std_tavg_region` vs `std_rating_region` avec les régions comme points colorés par `Country` et annotés pour les cas extrêmes ; complété d'un bar chart des 15 régions les plus stables vs les 15 plus capricieuses (classées par `std_rating_region`)
-
-**Approche :** On filtre les régions ayant au moins 5 millésimes distincts (259 régions exploitables dans le dataset). Pour chaque région, on calcule l'écart-type des notes par année (`std_rating_region`) et l'écart-type de la température estivale (`std_tavg_region`). Le scatter plot teste si variabilité climatique et variabilité des notes sont corrélées.
-
+##### Q20 — Le profil climatique annuel d'une région permet-il de prédire la régularité de sa production d'une année à l'autre ?
+ 
+**Objectif :** Tester si les régions au climat annuel plus stable (faible variabilité de la température estivale d'une année à l'autre) produisent des vins avec des notes plus homogènes entre millésimes. Question conclusive qui relie les axes climatiques (Axe 5) et la stabilité de production (Q11), ce qui cloture la problématique centrale du projet.
+ 
+**Variables :** `Region`, `Year`, `Rating`, `Jul_tavg`, `Aug_tavg`, `Sep_tavg` — variables construites : `std_rating_region`, `std_tavg_region`
+ 
+**Graphique :** Scatter plot `std_tavg_region` (variabilité climatique) vs `std_rating_region` (variabilité des notes) avec les régions comme points colorés par `Country`, annoté pour les cas extrêmes, avec droite de tendance
+ 
+**Approche :** On filtre les régions avec ≥ 5 millésimes. On calcule l'écart-type de la note et de la température estivale par région. Le scatter plot teste visuellement la corrélation entre stabilité climatique et stabilité qualitative. La visualisation obtenue permettra d'ouvrir sur les limites du seul facteur climatique pour expliquer la régularité d'une production viticole.
+ 
 ---
 
 #### Points de vigilance
