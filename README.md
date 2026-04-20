@@ -110,13 +110,13 @@ Notre analyse s'articule autour de **6 axes indépendants**, progressant du desc
 
 ##### Q2 — Le nombre d'évaluations est-il suffisant pour que les notes soient fiables ?
 
-**Objectif :** Identifier un biais potentiel majeur : une note de 4.5 basée sur 8 avis est très différente d'une note de 4.5 basée sur 2 000 avis. Cette question définit un seuil de fiabilité que nous appliquerons comme filtre dans les analyses suivantes.
+**Objectif :** Identifier un biais potentiel majeur : une note de 4.5 basée sur 30 avis est très différente d'une note de 4.5 basée sur 2 000 avis. Cette question définit un seuil de fiabilité que nous appliquerons comme filtre dans les analyses suivantes.
 
 **Variables :** `NumberOfRatings`, `Rating`, `type`
 
-**Graphique :** Scatter plot (`NumberOfRatings` en x, `Rating` en y) avec échelle logarithmique sur l'axe x, coloré par `type`
+**Graphique :** Boxplot des distributions de Rating par tranche de nombre d'avis (25–49, 50–99, 100–199, 200–499, 500–999, 1 000+)
 
-**Approche :** On trace la relation entre le nombre d'avis et la note. Si les vins peu notés (ex. < 50 avis) présentent une forte dispersion verticale, cela confirme leur manque de fiabilité. On trace une ligne de seuil vertical et on observe que la variance des notes se réduit au-delà. Ce seuil sera appliqué comme filtre dans les axes suivants pour garantir des comparaisons robustes.
+**Approche :** On regroupe les vins en tranches croissantes de nombre d'avis et on compare la dispersion des notes (hauteur des boîtes, étendue des moustaches) entre tranches. Si les tranches basses présentent une dispersion nettement plus forte que les tranches hautes, cela confirme leur manque de fiabilité statistique. On identifie visuellement le seuil à partir duquel la dispersion se stabilise — ce seuil sera appliqué comme filtre dans les axes suivants pour garantir des comparaisons robustes.
 
 ---
 
