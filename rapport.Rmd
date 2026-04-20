@@ -438,3 +438,44 @@ Le boxplot confirme l'intuition de départ. Les deux premières tranches (25–4
 
 La tranche 1000+ présente une boîte légèrement plus large. Non pas par manque de fiabilité, mais par un biais de sélection inverse : les vins accumulant autant d'avis sont les grands noms très médiatisés (Champagnes de prestige, premiers crus bordelais), des bouteilles qui polarisent les opinions entre amateurs convaincus et consommateurs qui les jugent surévaluées. C'est un phénomène distinct du bruit statistique observé à gauche du seuil.
 
+Axe 2 — Prix, popularité et qualité
+Q3 — Existe-t-il une corrélation entre le prix et la note, et varie-t-elle selon le type de vin ?
+
+Le prix d’un vin est souvent perçu comme un indicateur de sa qualité, mais cette relation est loin d’être systématique. Certains vins peuvent être très chers sans être particulièrement mieux notés, tandis que d’autres offrent un excellent niveau de qualité pour un prix modéré. Il est donc essentiel d’analyser si une véritable corrélation existe entre le prix et la note, et surtout si cette relation varie selon le type de vin (rouge, blanc, rosé, effervescent).
+
+On s’attend à observer une relation positive globale entre prix et note, mais avec des intensités différentes selon les catégories. Les vins rouges et effervescents pourraient présenter une corrélation plus marquée, tandis que les blancs et rosés pourraient montrer une relation plus faible ou plus dispersée.
+
+```
+wines_clean <- df_clean %>%
+  filter(!is.na(Price), !is.na(Rating))
+
+ggplot(wines_clean, aes(x = Price, y = Rating, color = type)) +
+  geom_point(alpha = 0.4) +
+  scale_x_log10() +
+  geom_smooth(method = "lm", se = FALSE) +
+  facet_wrap(~type) +
+  labs(
+    title    = "Relation entre le prix et la note des vins selon le type",
+    subtitle = "Analyse de la corrélation prix–qualité avec échelle logarithmique",
+    x        = "Prix (échelle logarithmique)",
+    y        = "Note (Rating)"
+  ) +
+  theme_bw() +
+  theme(
+    plot.title    = element_text(face = "bold", size = 13),
+    plot.subtitle = element_text(size = 10, color = "grey40")
+  )
+
+```
+Analyse
+
+Les résultats montrent une relation globalement positive entre le prix et la note, confirmant partiellement l’hypothèse selon laquelle les vins plus chers tendent à être mieux notés. Cependant, cette relation reste modérée et très dépendante du type de vin.
+
+Les vins rouges présentent la corrélation la plus visible entre prix et note, avec une tendance ascendante plus marquée. Cela peut s’expliquer par la forte segmentation du marché des vins rouges, allant des bouteilles d’entrée de gamme jusqu’aux grands crus prestigieux très valorisés.
+
+Les vins blancs et rosés montrent une relation beaucoup plus faible, avec une dispersion importante des points, suggérant que le prix n’est pas un bon prédicteur de la qualité perçue dans ces catégories.
+
+Les vins effervescents présentent une structure intermédiaire, avec une tendance positive mais influencée par quelques observations extrêmes correspondant à des champagnes haut de gamme.
+
+Enfin, la forte dispersion des points montre que le prix seul ne suffit pas à expliquer la qualité d’un vin, ce qui souligne l’importance d’intégrer d’autres facteurs (région, millésime, conditions climatiques) dans les analyses suivantes.
+
