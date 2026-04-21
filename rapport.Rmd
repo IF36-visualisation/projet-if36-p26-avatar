@@ -479,3 +479,70 @@ Pour les vins blancs et rosés, la relation est beaucoup moins nette. Les points
 Les vins effervescents se situent entre les deux : on observe une tendance positive, mais elle est influencée par quelques vins très haut de gamme qui tirent la relation vers le haut.
 
 Globalement, on remarque que le prix ne suffit pas à expliquer la qualité d’un vin. Cela montre qu’il faudra prendre en compte d’autres facteurs comme la région, le millésime ou encore les conditions climatiques pour mieux comprendre ce qui influence réellement la note.
+
+### Q6 — Les vins chers sont-ils aussi les plus populaires, et cette relation se reflète-t-elle dans la note ?
+
+Un vin cher est-il nécessairement un vin populaire ? On pourrait le penser : un grand cru reconnu attire naturellement les amateurs et accumule les évaluations. Mais l'hypothèse inverse est tout aussi plausible : les vins très accessibles, achetés en masse, seraient davantage notés que les vins d'exception, rares et confidentiels.
+
+Nous appliquons une transformation logarithmique sur `Price` et `NumberOfRatings`, dont les distributions sont très asymétriques, quelques bouteilles à plus de 1 000 € ou 50 000 avis écraserait l'ensemble du nuage sans cette correction. Deux lignes médianes 
+délimitent quatre quadrants de lecture. Le graphique est facetté par `type` car les dynamiques prix/popularité diffèrent structurellement entre un rouge de Bordeaux et un effervescent de supermarché.
+
+```{r q6_prix_popularite, fig.width=11, fig.height=7}
+df_q6 %
+  filter(!is.na(Price), !is.na(NumberOfRatings), !is.na(Rating),
+         Price > 0, NumberOfRatings > 0) %>%
+  mutate(
+    log_price = log10(Price),
+    log_pop   = log10(NumberOfRatings),
+    type = fct_relevel(type, "Red", "White", "Rose", "Sparkling")
+  )
+
+medians %
+  group_by(type) %>%
+  summarise(med_price = median(log_price),
+            med_pop   = median(log_pop),
+            .groups   = "drop")
+
+ggplot(df_q6, aes(x = log_price, y = log_pop, color = Rating)) +
+  geom_point(alpha = 0.3, size = 1.1) +
+  geom_vline(data = medians, aes(xintercept = med_price),
+             linetype = "dashed", color = "grey40", linewidth = 0.5) +
+  geom_hline(data = medians, aes(yintercept = med_pop),
+             linetype = "dashed", color = "grey40", linewidth = 0.5) +
+  scale_color_gradientn(
+    colours = c("#d73027", "#fee08b", "#1a9850"),
+    name = "Note", limits = c(2.5, 5)
+  ) +
+  scale_x_continuous(
+    name   = "Prix (€, échelle log)",
+    breaks = log10(c(5, 10, 50, 100, 500, 1000)),
+    labels = c("5", "10", "50", "100", "500", "1 000")
+  ) +
+  scale_y_continuous(
+    name   = "Nombre d'évaluations (échelle log)",
+    breaks = log10(c(25, 100, 500, 1000, 5000, 20000)),
+    labels = c("25", "100", "500", "1k", "5k", "20k")
+  ) +
+  facet_wrap(~ type, scales = "free", ncol = 2) +
+  labs(
+    title    = "Prix, popularité et note : quatre profils de vins",
+    subtitle = "Pointillés = médianes par type. Couleur = note moyenne.",
+    caption  = "Source : Kaggle — Wine Growth Weather (Anton Budnyak, 2020)"
+  ) +
+  theme_bw(base_size = 11) +
+  theme(
+    plot.title      = element_text(face = "bold", size = 13),
+    plot.subtitle   = element_text(size = 10, color = "grey40"),
+    strip.text      = element_text(face = "bold"),
+    legend.position = "bottom",
+    legend.key.width = unit(1.5, "cm"),
+    panel.grid.minor = element_blank()
+  )
+```
+**Analyse**
+
+Le nuage de points invalide l'hypothèse de départ : prix et popularité ne sont pas corrélés positivement. Le quadrant le plus dense est celui des vins **accessibles et populaires** (bas prix, nombreuses évaluations). Ce sont les vins de grande consommation, achetés et notés en masse, non pas parce qu'ils sont excellents mais parce qu'ils sont omniprésents. À l'opposé, les vins très chers se concentrent dans le quadrant **cher et confidentiel** : peu évalués, mais souvent mieux notés (teinte verte), ce qui suggère un lien entre prix élevé et qualité perçue, sans que cette qualité se traduise en volume d'évaluations.
+
+La facette par type révèle des comportements distincts. Les rouges couvrent l'ensemble des quadrants, reflétant l'extrême diversité de cette catégorie. Les effervescents et rosés, moins représentés, se concentrent davantage dans les tranches accessibles avec un volume d'avis modéré.
+
+Cette analyse comporte une limite importante : `NumberOfRatings` mesure la diffusion commerciale d'un vin, pas sa notoriété réelle. Un Pétrus aura toujours moins d'évaluations qu'un Bordeaux de supermarché par pure rareté, non par manque de reconnaissance. La popularité telle que mesurée ici est donc un proxy imparfait. Ce constat rejoint le seuil de fiabilité établi en Q2 : les analyses suivantes se limiteront aux vins disposant d'au moins 100 évaluations.
