@@ -1,7 +1,7 @@
 ---
 title: 'Vin & Météo : l''influence du climat sur la qualité des vins'
 subtitle: "Rapport d'analyse exploratoire"
-author: "Samuel FANDIO NJIKAM, Samella LEUKOUO, Fanta DEMBELE, Mohamed Mehdi TRABELSSI"
+author: "Samuel FANDIO NJIKAM, Samella LEUKOUO, Mohamed Mehdi TRABELSSI"
 output:
   html_document:
     toc: true
@@ -48,6 +48,10 @@ library(readr)
 library(prettydoc)
 library(tidyverse)
 library(forcats)
+library(ggrepel)
+library(patchwork)
+library(maps)
+library(RColorBrewer)
 ```
 
 ```{r data}
@@ -64,8 +68,7 @@ wines <- read_csv("data/wines_merged.csv") %>%
 | L'équipe Avatar         |
 | --------------------    |
 | Samuel FANDIO NJIKAM    |
-| Samella LEUKOUO         |  
-| Fanta DEMBELE           |
+| Samella LEUKOUO         |
 | Mohamed Mehdi TRABELSSI |
 
 
@@ -186,9 +189,9 @@ Notre analyse s'articule autour de **6 axes indépendants**, progressant du desc
 
 **Variables :** `Region`, `Country`, `Rating`, `NumberOfRatings`
 
-**Graphique :** Bar chart horizontal des 20 régions avec la note moyenne la plus élevée, filtré sur les régions comptant au moins 30 vins évalués, coloré par `Country`
+**Graphique :** Lollipop chart horizontal des 20 régions avec la note moyenne la plus élevée, filtré sur les régions comptant au moins 20 vins évalués, coloré par `Country`
 
-**Approche :** On agrège le dataset par région pour calculer la note moyenne et le nombre de vins. On filtre les régions avec trop peu d'observations (seuil défini à partir de Q2) pour éviter les régions anecdotiques. Le bar chart horizontal permet de lire facilement les noms de régions souvent longs, et la couleur par pays révèle si les meilleures régions sont concentrées dans un même pays ou dispersées géographiquement.
+**Approche :** On agrège le dataset par région pour calculer la note moyenne et le nombre de vins. On filtre les régions avec trop peu d'observations (seuil ≥ 20 vins, défini à partir de Q2) pour éviter les régions anecdotiques. Le lollipop chart est privilégié au bar chart car les valeurs s'échelonnent entre 3,99 et 4,37 — un bar chart depuis 0 rendrait les différences invisibles, et un bar chart tronqué introduirait un Lie Factor. Le dot encode la position (canal perceptuel le plus précis), et la couleur par pays révèle si les meilleures régions sont concentrées dans un même pays ou dispersées géographiquement.
 
 ##### Q5 — Certains producteurs se distinguent-ils par une note systématiquement supérieure à celle de leur région ?
  
@@ -218,9 +221,9 @@ Notre analyse s'articule autour de **6 axes indépendants**, progressant du desc
  
 **Objectif :** Comparer les grands pays producteurs (12 pays avec ≥ 100 vins) sur leur positionnement simultané en note et en prix. Cette question adopte une granularité nationale, qui revèle des stratégies de marché différentes : la France produit cher (médiane 27€) là où le Portugal produit abordable (11€) pour des notes similaires.
  
-**Variables :** `Country`, `Rating`, `Price`, `type`
- 
-**Graphique :** Scatter plot des pays (`price_med` en x, `rating_med` en y), avec des points dimensionnés par nombre de vins et colorés par continent, avec annotation des noms de pays
+**Variables :** `Country`, `Rating`, `Price` — variable construite : `Continent`
+
+**Graphique :** Scatter plot des pays (`price_med` en x, `rating_med` en y), coloré par continent, avec annotation des noms de pays
  
 **Approche :** On agrège par pays (filtre ≥ 100 vins, 12 pays exploitables). Chaque pays devient un point sur le graphique prix/note. On identifiera les pays à fort rapport qualité/prix (Portugal, Espagne, Chili) vs. les pays premium (France, États-Unis).
  
@@ -238,11 +241,11 @@ Notre analyse s'articule autour de **6 axes indépendants**, progressant du desc
  
 **Objectif :** Explorer si la position géographique d'une région (qui détermine structurellement son ensoleillement et ses températures moyennes) est associée à la qualité moyenne des vins produits, indépendamment des variations annuelles.
  
-**Variables :** `lat`, `lng`, `Rating`, `Country`, `type`
+**Variables :** `lat`, `lng`, `Rating`, `NumberOfRatings`
+
+**Graphique :** Carte géographique (`ggplot2` + `geom_point`) où chaque région est positionnée par `lat`/`lng`, colorée par note moyenne ; complétée d'un scatter plot `lat` vs `Rating` avec droite de régression
  
-**Graphique :** Carte géographique (`ggplot2` + `geom_point`) où chaque région est positionnée par `lat`/`lng`, colorée par note moyenne et dimensionnée par nombre de vins ; complétée d'un scatter plot `lat` vs `Rating` avec droite de régression
- 
-**Approche :** On agrège les données par région pour obtenir la note moyenne et le nombre de vins. On projette chaque région sur une carte du monde pour révéler des patterns spatiaux visuels. Le scatter plot complémentaire `lat` vs `Rating` quantifie la tendance. On contrôle par `type` pour isoler l'effet de la latitude de celui du type de vin produit dans chaque zone.
+**Approche :** On agrège les données par région pour obtenir la note moyenne et le nombre de vins (filtre ≥ 10 vins par région). On projette chaque région sur une carte du monde pour révéler des patterns spatiaux visuels. Le scatter plot complémentaire `lat` vs note moyenne quantifie la tendance et ajoute une droite de régression pour mesurer l'effet de la latitude.
  
 ---
 
@@ -290,7 +293,7 @@ Notre analyse s'articule autour de **6 axes indépendants**, progressant du desc
 
 **Graphique :** Scatter plot facetté par `type` avec deux courbes `geom_smooth` superposées — une pour `tsun_print` (printemps) et une pour `tsun_ete` (été) — colorées différemment
 
-**Approche :** On construit `tsun_print` (moyenne avril-juin) et `tsun_ete` (moyenne juillet-septembre). On trace les deux relations sur le même graphique par type. La comparaison des pentes révèle quelle période compte le plus pour chaque type de vin. Les effervescents devraient montrer un printemps plus déterminant, contrairement aux rouges.
+**Approche :** On construit `tsun_print` (moyenne avril-juin) et `tsun_ete` (moyenne juillet-septembre). On trace les deux relations sur le même graphique par type. La comparaison des pentes révèle quelle période compte le plus pour chaque type de vin. On s'attend à ce que l'été soit plus déterminant, bien que les deux saisons puissent se révéler similaires selon le type.
 
 ##### Q14 — Les précipitations estivales ont-elles un effet négatif sur la note des vins effervescents, et comment cet effet se compare-t-il aux autres types ?
 
@@ -336,17 +339,17 @@ Notre analyse s'articule autour de **6 axes indépendants**, progressant du desc
  
 **Variables :** `type`, `Country`, `Region`, `Price`
  
-**Graphique :** Graphique à bulles (`geom_point`) avec le nombre de pays en x, le nombre de régions en y, la taille des bulles proportionnelle au prix médian, et la couleur encodant le type ; complété d'un bar chart des prix médians par type
+**Graphique :** Scatter plot avec le nombre de pays en x, le nombre de régions en y, la couleur encodant le type (points de taille fixe — la diversité géographique est encodée par la position x/y) ; complété d'un bar chart horizontal des prix médians par type (encodage par longueur)
  
-**Approche :** On agrège par type pour obtenir le nombre de pays distincts, de régions distinctes et le prix médian. Le graphique à bulles positionne chaque type dans l'espace diversité/concentration.
+**Approche :** On agrège par type pour obtenir le nombre de pays distincts, de régions distinctes et le prix médian. Le scatter plot positionne chaque type dans l'espace diversité (nb pays × nb régions) ; le bar chart complémentaire lit le prix médian par longueur, encodage perceptuellement supérieur à la taille des bulles.
 
 ##### Q18 — La variabilité des notes au sein d'un même pays reflète-t-elle une hétérogénéité de production ou une richesse de terroirs ?
  
 **Objectif :** Comparer les pays non sur leur note moyenne (comme en Q7) mais sur leur *dispersion* interne (`std` des notes). Un pays avec une forte dispersion produit à la fois de très bons et de très mauvais vins (profil hétérogène), tandis qu'un pays homogène maintient un niveau constant.
  
-**Variables :** `Country`, `Rating`, `type`
- 
-**Graphique :** Bar chart horizontal des pays (≥ 100 vins) classés par écart-type des notes, avec la note moyenne annotée sur chaque barre, coloré par continent
+**Variables :** `Country`, `Rating`
+
+**Graphique :** Bar chart horizontal des pays (≥ 100 vins) classés par écart-type des notes, avec la note moyenne annotée sur chaque barre, la couleur encodant la note moyenne (gradient séquentiel)
  
 **Approche :** On calcule la note moyenne et l'écart-type par pays. On trie par écart-type décroissant. On annote la note moyenne sur chaque barre pour lire simultanément qualité moyenne et régularité. Les pays "surprises" (bonne moyenne + forte dispersion) seront les plus intéressants à commenter.
 
@@ -358,7 +361,7 @@ Notre analyse s'articule autour de **6 axes indépendants**, progressant du desc
  
 **Graphique :** Scatter plot des régions (≥ 15 vins) avec `ecart_note_pays` en x et `ecart_prix_pays` en y, annoté pour les régions dans le quadrant "mieux notées + moins chères", coloré par `Country`
  
-**Approche :** Pour chaque région, on calcule l'écart à la note moyenne nationale et l'écart au prix médian national. On projette chaque région sur le plan (écart_note, écart_prix). Le quadrant supérieur gauche (meilleure note, prix inférieur) identifie les pépites.
+**Approche :** Pour chaque région, on calcule l'écart à la note moyenne nationale et l'écart au prix médian national. On projette chaque région sur le plan (écart_note, écart_prix). Le quadrant inférieur droit (écart_note > 0, écart_prix < 0 : meilleure note ET moins cher) identifie les pépites.
 
 ##### Q20 — Le profil climatique annuel d'une région permet-il de prédire la régularité de sa production d'une année à l'autre ?
  
@@ -385,6 +388,35 @@ Notre analyse s'articule autour de **6 axes indépendants**, progressant du desc
 # Exploration
 
 ## Axe 1 — Distributions et structure
+
+### Q1 — Comment se distribuent les notes des vins, et cette distribution varie-t-elle selon le type ?
+
+Avant toute analyse explicative, nous observons la distribution brute de la variable cible `Rating` pour chaque type de vin. Cette visualisation est réalisée sur l'ensemble du dataset, avant l'application du filtre de fiabilité défini en Q2.
+
+```{r q1_distribution_notes, fig.width=9, fig.height=5}
+ggplot(wines, aes(x = type, y = Rating, fill = type)) +
+  geom_violin(alpha = 0.55, trim = FALSE) +
+  geom_boxplot(width = 0.12, fill = "white", alpha = 0.85,
+               outlier.size = 0.4, outlier.alpha = 0.3) +
+  scale_fill_brewer(palette = "Set1", guide = "none") +
+  scale_y_continuous(limits = c(2.0, 5.2), breaks = seq(2.5, 5.0, by = 0.25)) +
+  labs(
+    title    = "Distribution des notes par type de vin",
+    subtitle = "Violin plot + boxplot superposés — dataset complet (avant filtrage)",
+    x        = "Type de vin",
+    y        = "Note (Rating)"
+  ) +
+  theme_bw() +
+  theme(
+    plot.title    = element_text(face = "bold", size = 13),
+    plot.subtitle = element_text(size = 10, color = "grey40")
+  )
+```
+**Analyse**
+
+Les quatre types n'affichent pas des médianes aussi proches que prévu : elles vont de 3,75 pour les rosés à 4,10 pour les effervescents. Ces derniers se démarquent clairement avec une distribution décalée vers le haut et plus resserrée, signe d'une qualité perçue globalement supérieure et plus homogène. Les rouges se positionnent légèrement au-dessus des blancs et des rosés, ces trois types partageant néanmoins des queues basses similaires. Ces différences justifient le recours systématique à des segmentations par type dans les analyses suivantes.
+
+---
 
 ### Q2 — Le nombre d'évaluations est-il suffisant pour que les notes soient fiables ?
 
@@ -431,12 +463,9 @@ ggplot(wines_q2, aes(x = tranche_avis, y = Rating)) +
     plot.subtitle = element_text(size = 10, color = "grey40")
   )
 ```
+**Analyse**
 
-  Le résultat est sans appel. Les vins des tranches **25–49** et **50–99 avis** présentent des boîtes larges et des moustaches très étendues. On y trouve des notes allant de 2,7 à 4,8, signe que ces évaluations reflètent davantage l'opinion d'un cercle restreint que celle d'un consensus. À partir de **100 avis**, la dispersion se resserre nettement et se stabilise : les médianes convergent autour de 3,9 et les boîtes rétrécissent, indiquant que la note converge vers une valeur représentative.
-
-  **Nous retenons donc un seuil de 100 avis comme filtre de fiabilité, qui sera appliqué dans toutes les analyses suivantes.** Cela représente un peu plus de la moitié du dataset; un volume largement suffisant.
-
-  Un dernier détail intéressant : la tranche **1 000+** voit sa dispersion légèrement remonter. Ce n'est pas un manque de fiabilité, c'est l'effet inverse : les vins très médiatisés (grands crus, Champagnes de prestige) polarisent les opinions entre admirateurs et sceptiques. Ce phénomène sera à garder en tête lors des analyses sur le prix.
+  La fiabilité d'une note est directement liée au volume d'évaluations : en dessous de 100 avis, la dispersion reste trop élevée pour être exploitable et reflète davantage une opinion restreinte qu'un consensus. A partir de ce seuil, les distributions convergent et se stabilisent, signalant que la note est représentative. **Nous retenons donc 100 avis comme filtre de fiabilité pour toutes les analyses suivantes**, ce qui couvre un peu plus de la moitié du dataset. A noter que les vins très médiatisés (tranche 1 000+) voient leur dispersion légèrement remonter, non par manque de fiabilité, mais parce qu'ils polarisent davantage les opinions entre admirateurs et sceptiques.
 
 ---
 
@@ -454,7 +483,7 @@ df_clean <- wines %>%
 ggplot(df_clean, aes(x = Price, y = Rating, color = type)) +
   geom_point(alpha = 0.4) +
   scale_x_log10() +
-  geom_smooth(method = "lm", se = FALSE) +
+  geom_smooth(method = "lm", se = FALSE, color = "black", linewidth = 0.9) +
   facet_wrap(~type) +
   labs(
     title    = "Relation entre le prix et la note des vins selon le type",
@@ -472,14 +501,58 @@ ggplot(df_clean, aes(x = Price, y = Rating, color = type)) +
 ```
 **Analyse**
 
-On observe une relation globalement positive entre le prix et la note des vins, ce qui confirme en partie l’idée intuitive selon laquelle les vins les plus chers sont aussi mieux notés. Cependant, cette relation reste assez modérée et surtout différente selon le type de vin.
+La corrélation entre prix et note est positive pour tous les types, mais son intensité varie. C'est paradoxalement chez les effervescents qu'elle est la plus forte, avec un nuage particulièrement serré autour de la droite, et non chez les rouges comme on aurait pu l'anticiper. Les rouges présentent néanmoins un signal clair grâce à leur large gamme de prix. Les blancs présentent la relation la plus dispersée autour de la droite, indiquant que le prix y est un indicateur de qualité moins fiable. En somme, l'hypothèse "cher = bon" se vérifie dans toutes les catégories, mais avec une intensité variable.
 
-Les vins rouges montrent la tendance la plus claire : plus le prix augmente, plus la note a tendance à augmenter également. Cela peut s’expliquer par le fait que les vins rouges couvrent une gamme de qualité et de prix très large, allant de vins simples à des grands crus très prestigieux.
+### Q4 — Quelles régions viticoles produisent les vins les mieux notés en moyenne ?
 
-Pour les vins blancs et rosés, la relation est beaucoup moins nette. Les points sont très dispersés, ce qui suggère que le prix n’est pas un bon indicateur de la qualité perçue dans ces catégories.
-Les vins effervescents se situent entre les deux : on observe une tendance positive, mais elle est influencée par quelques vins très haut de gamme qui tirent la relation vers le haut.
+On cherche à identifier les terroirs d’excellence dans les données, en filtrant les régions avec trop peu d’observations pour éviter les résultats anecdotiques. Les notes varient toutes entre 3,99 et 4,37 — une plage très étroite qui rend un bar chart depuis 0 illisible et un bar chart tronqué trompeur (Lie Factor). Le lollipop chart (dot + segment) est ici le bon choix : le dot encode la position (canal le plus précis selon la hiérarchie de Bertin), et la couleur par pays révèle si l’excellence se concentre géographiquement.
 
-Globalement, on remarque que le prix ne suffit pas à expliquer la qualité d’un vin. Cela montre qu’il faudra prendre en compte d’autres facteurs comme la région, le millésime ou encore les conditions climatiques pour mieux comprendre ce qui influence réellement la note.
+```{r q4_regions_top, fig.width=11, fig.height=7}
+wines_filtered <- wines %>% filter(NumberOfRatings >= 100)
+
+region_stats_q4 <- wines_filtered %>%
+  filter(!is.na(Region), !is.na(Rating), !is.na(Country)) %>%
+  group_by(Region, Country) %>%
+  summarise(
+    n_wines     = n(),
+    mean_rating = mean(Rating, na.rm = TRUE),
+    .groups     = "drop"
+  ) %>%
+  filter(n_wines >= 20) %>%
+  slice_max(order_by = mean_rating, n = 20)
+
+ggplot(region_stats_q4,
+       aes(y = reorder(Region, mean_rating))) +
+  geom_segment(aes(x = 3.95, xend = mean_rating,
+                   yend = reorder(Region, mean_rating)),
+               color = "grey70", linewidth = 0.6) +
+  geom_point(aes(x = mean_rating, color = Country), size = 4) +
+  geom_text(aes(x = mean_rating, label = round(mean_rating, 2)),
+            hjust = -0.4, size = 3) +
+  scale_color_manual(
+    values = colorRampPalette(brewer.pal(12, "Paired"))(n_distinct(region_stats_q4$Country)),
+    name = "Pays"
+  ) +
+  scale_x_continuous(limits = c(3.95, 4.52)) +
+  labs(
+    title    = "Top 20 regions viticoles par note moyenne",
+    subtitle = "Régions avec au moins 20 vins évalués (filtre 100 avis par vin)",
+    x        = "Note moyenne",
+    y        = NULL
+  ) +
+  theme_bw() +
+  theme(
+    plot.title    = element_text(face = "bold", size = 13),
+    plot.subtitle = element_text(size = 10, color = "grey40"),
+    legend.position = "right"
+  )
+```
+
+**Analyse**
+
+Les meilleures régions affichent des notes moyennes au-dessus de 4,2, ce qui est significatif sur une échelle aussi resserrée. La France domine le classement devant l'Italie, confirmant la prédominance des terroirs d'Europe occidentale dans la perception internationale de la qualité viticole. Cette concentration géographique de l'excellence montre que le terroir, au sens large, reste un déterminant fort de la qualité perçue, indépendamment du type de vin ou du prix.
+
+---
 
 ### Q5 — Certains producteurs se distinguent-ils par une note systématiquement supérieure à celle de leur région ?
 
@@ -537,11 +610,7 @@ ggplot(winery_stats, aes(x = ecart_moy, y = reorder(Winery, ecart_moy), color = 
 
 **Analyse**
 
-Le dot plot révèle que certains producteurs surperforment structurellement leur région, avec un écart positif stable et des intervalles de confiance resserrés, signe que leur avantage n'est pas dû au hasard. Ces domaines tirent la moyenne régionale vers le haut et illustrent l'**effet domaine** : à terroir équivalent, le savoir-faire du vigneron fait une différence mesurable.
-
-À l'inverse, quelques producteurs affichent un écart élevé mais avec de larges barres d'erreur, ce qui trahit un faible nombre de vins notés et rend leur surperformance statistiquement fragile. Le filtre à 10 vins minimum limite ce biais, mais ne l'élimine pas totalement.
-
-La couleur par type montre que les rouges dominent ce classement, ce qui reflète à la fois leur surreprésentation dans le dataset et la plus grande amplitude de qualité au sein de cette catégorie.
+Oui, clairement : certains producteurs affichent un écart à la note régionale systématiquement positif, et la majorité des intervalles de confiance excluent zéro, ce qui confirme que cette surperformance ne doit rien au hasard. Ces domaines illustrent bien l'effet domaine, c'est-à-dire que le savoir-faire d'un vigneron peut faire une vraie différence, même dans une région de réputation ordinaire. Les rouges dominent le classement, ce qui s'explique avant tout par leur forte surreprésentation dans le dataset et par l'amplitude de qualité plus grande dans cette catégorie. Quelques producteurs affichent un écart élevé mais avec de larges barres d'erreur, ce qui invite à rester prudent : leur surperformance repose sur trop peu de vins pour être conclusive.
 
 ### Q6 — Les vins chers sont-ils aussi les plus populaires, et cette relation se reflète-t-elle dans la note ?
 
@@ -604,8 +673,802 @@ ggplot(df_q6, aes(x = log_price, y = log_pop, color = Rating)) +
 ```
 **Analyse**
 
-Le nuage de points invalide l'hypothèse de départ : prix et popularité ne sont pas corrélés positivement. Le quadrant le plus dense est celui des vins **accessibles et populaires** (bas prix, nombreuses évaluations). Ce sont les vins de grande consommation, achetés et notés en masse, non pas parce qu'ils sont excellents mais parce qu'ils sont omniprésents. À l'opposé, les vins très chers se concentrent dans le quadrant **cher et confidentiel** : peu évalués, mais souvent mieux notés (teinte verte), ce qui suggère un lien entre prix élevé et qualité perçue, sans que cette qualité se traduise en volume d'évaluations.
+Le graphique montre que prix et popularité ne suivent pas de logique linéaire claire, mais les extrêmes sont parlants : les volumes d'évaluations les plus élevés se concentrent sur les vins les moins chers, achetés et notés en masse, tandis que les vins chers restent peu évalués mais tendent à être mieux notés (teinte verte), ce qui suggère une logique de prestige. Le marché viticole se scinde donc en deux dynamiques opposées : volume pour les uns, qualité confidentielle pour les autres. Il faut garder à l'esprit que `NumberOfRatings` mesure une diffusion commerciale et non une vraie notoriété, ce qui renforce la pertinence du filtre à 100 avis établi en Q2 pour la suite du rapport.
 
-La facette par type révèle des comportements distincts. Les rouges couvrent l'ensemble des quadrants, reflétant l'extrême diversité de cette catégorie. Les effervescents et rosés, moins représentés, se concentrent davantage dans les tranches accessibles avec un volume d'avis modéré.
+---
 
-Cette analyse comporte une limite importante : `NumberOfRatings` mesure la diffusion commerciale d'un vin, pas sa notoriété réelle. Un Pétrus aura toujours moins d'évaluations qu'un Bordeaux de supermarché par pure rareté, non par manque de reconnaissance. La popularité telle que mesurée ici est donc un proxy imparfait. Ce constat rejoint le seuil de fiabilité établi en Q2 : les analyses suivantes se limiteront aux vins disposant d'au moins 100 évaluations.
+## Axe 3 — Profil géographique et comparaison internationale
+
+### Q7 — Quels pays produisent les vins les mieux notés, et à quel prix ?
+
+On compare les grands pays producteurs sur deux dimensions simultanées : note médiane et prix médian. Le scatter plot est ici plus efficace qu'un simple bar chart car il positionne chaque pays dans un espace bidimensionnel, révélant des stratégies de marché différentes. La couleur distingue les continents, et chaque point est étiqueté pour identifier directement le pays.
+
+```{r q7_pays_note_prix, fig.width=10, fig.height=7}
+continent_lookup <- tibble(
+  Country   = c("France","Italy","Spain","Portugal","Germany","Austria",
+                "Switzerland","Greece","Hungary","Romania","Moldova",
+                "Georgia","Bulgaria","Croatia","Slovenia",
+                "United States","Argentina","Chile","Uruguay","Brazil",
+                "Australia","New Zealand",
+                "South Africa",
+                "Israel","Lebanon","Turkey","China","Japan"),
+  Continent = c("Europe","Europe","Europe","Europe","Europe","Europe",
+                "Europe","Europe","Europe","Europe","Europe",
+                "Europe","Europe","Europe","Europe",
+                "Ameriques","Ameriques","Ameriques","Ameriques","Ameriques",
+                "Oceanie","Oceanie",
+                "Afrique",
+                "Asie","Asie","Asie","Asie","Asie")
+)
+
+wines_filtered <- wines %>% filter(NumberOfRatings >= 100)
+
+country_stats_q7 <- wines_filtered %>%
+  filter(!is.na(Country), !is.na(Rating), !is.na(Price), Price > 0) %>%
+  group_by(Country) %>%
+  summarise(
+    n_wines    = n(),
+    rating_med = median(Rating, na.rm = TRUE),
+    price_med  = median(Price, na.rm = TRUE),
+    .groups    = "drop"
+  ) %>%
+  filter(n_wines >= 100) %>%
+  left_join(continent_lookup, by = "Country") %>%
+  mutate(Continent = replace_na(Continent, "Autre"))
+
+ggplot(country_stats_q7,
+       aes(x = price_med, y = rating_med,
+           color = Continent, label = Country)) +
+  geom_point(size = 4, alpha = 0.85) +
+  geom_text_repel(size = 3.2, show.legend = FALSE) +
+  scale_color_brewer(palette = "Set1", name = "Continent") +
+  scale_x_log10(labels = function(x) paste0(x, "€")) +
+  labs(
+    title    = "Positionnement des pays producteurs : note vs prix médians",
+    subtitle = "Pays avec au moins 100 vins évalués (filtre 100 avis). Prix en échelle log.",
+    x        = "Prix médian (EUR, échelle log)",
+    y        = "Note médiane"
+  ) +
+  theme_bw() +
+  theme(
+    plot.title    = element_text(face = "bold", size = 13),
+    plot.subtitle = element_text(size = 10, color = "grey40")
+  )
+```
+
+**Analyse**
+
+Le graphique met en évidence deux stratégies de marché bien distinctes. La France se positionne seule dans le coin supérieur droit non pas parce qu'elle dépasse les autres en note médiane, qu'elle partage avec le Portugal, l'Allemagne, l'Italie et les États-Unis, mais parce que ses prix sont nettement plus élevés. Le Portugal et l'Espagne atteignent la même note pour deux à trois fois moins cher, ce qui en fait les vrais champions du rapport qualité/prix. Le Chili se distingue par un prix très accessible mais aussi par la note médiane la plus basse du graphe. Cette lecture simultanée des deux dimensions est plus informative qu'un simple classement par note : elle révèle que le prestige tarifaire ne se traduit pas toujours par 
+une supériorité qualitative mesurable.
+
+---
+
+### Q8 — Quel type de vin offre le meilleur rapport qualité/prix, et dans quels pays ce rapport est-il le plus favorable ?
+
+On construit un indicateur synthétique `qp_ratio = Rating / log(Price + 1)` pour comparer types et pays sur une seule dimension. Des barres d'erreur à 95% accompagnent chaque barre pour évaluer la robustesse des écarts observés.
+
+```{r q8_rapport_qp, fig.width=11, fig.height=6}
+wines_qp <- wines %>%
+  filter(NumberOfRatings >= 100, !is.na(Price), !is.na(Rating), Price > 0) %>%
+  mutate(qp_ratio = Rating / log(Price + 1))
+
+type_qp <- wines_qp %>%
+  group_by(type) %>%
+  summarise(
+    mean_qp = mean(qp_ratio, na.rm = TRUE),
+    se_qp   = sd(qp_ratio, na.rm = TRUE) / sqrt(n()),
+    .groups = "drop"
+  )
+
+top_countries_q8 <- wines_qp %>%
+  count(Country, sort = TRUE) %>%
+  slice_max(n, n = 8) %>%
+  pull(Country)
+
+country_qp <- wines_qp %>%
+  filter(Country %in% top_countries_q8) %>%
+  group_by(Country) %>%
+  summarise(
+    mean_qp = mean(qp_ratio, na.rm = TRUE),
+    se_qp   = sd(qp_ratio, na.rm = TRUE) / sqrt(n()),
+    .groups = "drop"
+  )
+
+p_type <- ggplot(type_qp,
+                 aes(x = reorder(type, mean_qp), y = mean_qp, fill = type)) +
+  geom_col(width = 0.6) +
+  geom_errorbar(aes(ymin = mean_qp - 1.96*se_qp, ymax = mean_qp + 1.96*se_qp),
+                width = 0.3, linewidth = 0.6) +
+  scale_fill_brewer(palette = "Set1", guide = "none") +
+  coord_flip() +
+  labs(title = "Par type de vin", x = NULL, y = "Score qualité/prix") +
+  theme_bw() +
+  theme(plot.title = element_text(face = "bold", size = 11))
+
+p_pays <- ggplot(country_qp,
+                 aes(x = reorder(Country, mean_qp), y = mean_qp, fill = Country)) +
+  geom_col(width = 0.6) +
+  geom_errorbar(aes(ymin = mean_qp - 1.96*se_qp, ymax = mean_qp + 1.96*se_qp),
+                width = 0.3, linewidth = 0.6) +
+  scale_fill_brewer(palette = "Paired", guide = "none") +
+  coord_flip() +
+  labs(title = "Par pays (top 8)", x = NULL, y = "Score qualité/prix") +
+  theme_bw() +
+  theme(plot.title = element_text(face = "bold", size = 11))
+
+p_type + p_pays +
+  plot_annotation(
+    title    = "Score qualité/prix moyen (Rating / log(Prix+1))",
+    subtitle = "Vins avec au moins 100 avis. Barres d'erreur = IC à 95%.",
+    theme    = theme(
+      plot.title    = element_text(face = "bold", size = 13),
+      plot.subtitle = element_text(size = 10, color = "grey40")
+    )
+  )
+```
+
+**Analyse**
+
+Ce sont les rosés qui offrent le meilleur rapport qualité/prix, suivis des blancs, des rouges, et enfin des effervescents en dernière position malgré leurs notes brutes élevées, leur prix élevé pénalisant fortement leur ratio. Par pays, l'Espagne et le Chili arrivent en tête, cohérent avec leur positionnement accessible observé en Q7. La France arrive dernière du classement pays, ses prix élevés effaçant l'avantage de ses notes. Ces écarts sont statistiquement robustes, ce qui valide la pertinence de cet indicateur comme complément à la note brute.
+
+---
+
+### Q9 — La latitude d'une région viticole influence-t-elle la qualité structurelle de ses vins ?
+
+On projette chaque région sur une carte mondiale colorée par note moyenne, puis on complète avec un scatter plot latitude vs note pour quantifier la tendance.
+
+```{r q9_carte_latitude, fig.width=12, fig.height=5}
+world_map <- map_data("world")
+
+region_geo <- wines %>%
+  filter(NumberOfRatings >= 100, !is.na(lat), !is.na(lng), !is.na(Rating)) %>%
+  group_by(Region, lat, lng) %>%
+  summarise(
+    mean_rating = mean(Rating, na.rm = TRUE),
+    n_wines     = n(),
+    .groups     = "drop"
+  ) %>%
+  filter(n_wines >= 10)
+
+ggplot() +
+  geom_polygon(data = world_map,
+               aes(x = long, y = lat, group = group),
+               fill = "grey90", color = "grey70", linewidth = 0.15) +
+  geom_point(data = region_geo,
+             aes(x = lng, y = lat, color = mean_rating),
+             size = 2.5, alpha = 0.75) +
+  scale_color_gradientn(
+    colours = c("#d73027","#fee08b","#1a9850"),
+    name    = "Note\nmoyenne", limits = c(3.0, 4.8)
+  ) +
+  coord_cartesian(xlim = c(-130, 60), ylim = c(-45, 65)) +
+  labs(
+    title    = "Carte des regions viticoles par note moyenne",
+    subtitle = "Régions avec au moins 10 vins évalués (filtre 100 avis par vin)",
+    x = NULL, y = NULL
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title    = element_text(face = "bold", size = 13),
+    plot.subtitle = element_text(size = 10, color = "grey40"),
+    axis.text     = element_blank(),
+    panel.grid    = element_line(color = "grey95")
+  )
+```
+
+```{r q9_latitude_scatter, fig.width=8, fig.height=5}
+ggplot(region_geo, aes(x = lat, y = mean_rating)) +
+  geom_point(aes(color = mean_rating), size = 2, alpha = 0.6) +
+  geom_smooth(method = "lm", se = TRUE, color = "black", linewidth = 0.9) +
+  scale_color_gradientn(
+    colours = c("#d73027","#fee08b","#1a9850"),
+    guide   = "none"
+  ) +
+  labs(
+    title    = "Latitude vs note moyenne par région viticole",
+    subtitle = "Chaque point = une région viticole. Couleur = note moyenne (rouge < jaune < vert).",
+    x        = "Latitude (degrés N)",
+    y        = "Note moyenne"
+  ) +
+  theme_bw() +
+  theme(
+    plot.title    = element_text(face = "bold", size = 13),
+    plot.subtitle = element_text(size = 10, color = "grey40")
+  )
+```
+
+**Analyse**
+
+La carte confirme une concentration des régions les mieux notées en Europe occidentale, les autres continents affichant des notes majoritairement moyennes. Le scatter plot révèle une tendance positive entre latitude et note, mais elle reste faible et la dispersion est importante : beaucoup de régions à latitude identique affichent des notes très différentes. La latitude est donc un facteur structurel, mais pas déterminant à elle seule. D'autres facteurs comme le type de cépage, les traditions locales ou le micro-climat régional expliquent une grande partie de la variance résiduelle.
+
+---
+
+## Axe 4 — Millésimes et effet du temps
+
+### Q10 — La note moyenne des vins a-t-elle évolué sur la période 2005-2019, et ce phénomène est-il homogène entre les types ?
+
+On trace l'évolution de la note moyenne annuelle par type, avec une bande de confiance proportionnelle au nombre d'observations pour lire la solidité de chaque tendance.
+
+```{r q10_evolution_millesimes, fig.width=11, fig.height=7}
+wines_time <- wines %>%
+  filter(NumberOfRatings >= 100, Year >= 2005, Year <= 2019, !is.na(Rating)) %>%
+  group_by(Year, type) %>%
+  summarise(
+    mean_rating = mean(Rating, na.rm = TRUE),
+    se          = sd(Rating, na.rm = TRUE) / sqrt(n()),
+    .groups     = "drop"
+  )
+
+ggplot(wines_time, aes(x = Year, y = mean_rating, color = type, fill = type)) +
+  geom_ribbon(aes(ymin = mean_rating - 1.96*se,
+                  ymax = mean_rating + 1.96*se),
+              alpha = 0.15, color = NA) +
+  geom_line(linewidth = 0.9) +
+  geom_point(size = 1.8) +
+  scale_color_brewer(palette = "Set1", guide = "none") +
+  scale_fill_brewer(palette = "Set1", guide = "none") +
+  scale_x_continuous(breaks = seq(2005, 2019, by = 2)) +
+  facet_wrap(~type, ncol = 2) +
+  labs(
+    title    = "Évolution de la note moyenne par millésime (2005-2019)",
+    subtitle = "Moyenne annuelle avec bande de confiance à 95% (vins au moins 100 avis)",
+    x        = "Millésime",
+    y        = "Note moyenne"
+  ) +
+  theme_bw(base_size = 10) +
+  theme(
+    plot.title      = element_text(face = "bold", size = 13),
+    plot.subtitle   = element_text(size = 10, color = "grey40"),
+    axis.text.x     = element_text(angle = 45, hjust = 1),
+    strip.text      = element_text(face = "bold")
+  )
+```
+
+**Analyse**
+
+La tendance n'est pas homogène et l'idée d'une stabilité générale ne tient pas. Les rouges montrent une baisse continue et solide sur toute la période, visible sur l'ensemble des millésimes. Les effervescents suivent la même direction. Seuls les blancs paraissent relativement stables sur la seconde moitié de la période. Une explication plausible est un biais de maturité des millésimes : les vins anciens ont eu le temps d'être évalués par des amateurs avertis, ce qui gonfle leur note moyenne, tandis que les millésimes récents sont encore sous-évalués faute d'un recul suffisant. Cette limite invite à la prudence avant de conclure à une baisse réelle de qualité.
+
+---
+
+### Q11 — Certaines régions viticoles sont-elles plus régulières que d'autres d'une année à l'autre ?
+
+On calcule l'écart-type de la note moyenne annuelle par région (avec au moins 5 millésimes distincts) et on compare les 15 plus stables aux 15 plus capricieuses.
+
+```{r q11_regularite_regions, fig.width=12, fig.height=7}
+region_regularity <- wines %>%
+  filter(NumberOfRatings >= 100, !is.na(Region), !is.na(Rating), !is.na(Year)) %>%
+  group_by(Region, Year) %>%
+  summarise(mean_rating_year = mean(Rating, na.rm = TRUE), .groups = "drop") %>%
+  group_by(Region) %>%
+  summarise(
+    n_years    = n_distinct(Year),
+    std_rating = sd(mean_rating_year, na.rm = TRUE),
+    .groups    = "drop"
+  ) %>%
+  filter(n_years >= 5) %>%
+  left_join(
+    wines %>% distinct(Region, Country) %>% group_by(Region) %>% slice(1),
+    by = "Region"
+  )
+
+stables   <- region_regularity %>% slice_min(std_rating, n = 15)
+variables <- region_regularity %>% slice_max(std_rating, n = 15)
+
+bind_rows(
+  mutate(stables,   groupe = "15 plus stables"),
+  mutate(variables, groupe = "15 plus capricieuses")
+) %>%
+  ggplot(aes(x = std_rating, y = reorder(Region, -std_rating), fill = Country)) +
+  geom_col(width = 0.7) +
+  facet_wrap(~groupe, scales = "free_y") +
+  scale_fill_manual(
+    values = colorRampPalette(brewer.pal(12, "Paired"))(n_distinct(region_regularity$Country)),
+    name = "Pays"
+  ) +
+  labs(
+    title    = "Régions les plus stables vs les plus capricieuses",
+    subtitle = "Écart-type de la note moyenne annuelle (régions avec au moins 5 millésimes, filtre 100 avis)",
+    x        = "Écart-type de la note par année",
+    y        = NULL
+  ) +
+  theme_bw() +
+  theme(
+    plot.title    = element_text(face = "bold", size = 13),
+    plot.subtitle = element_text(size = 10, color = "grey40"),
+    legend.position = "bottom"
+  )
+```
+
+**Analyse**
+
+Oui, et l'écart entre les deux profils est frappant. Les régions stables varient de moins de 0,1 point d'une année à l'autre, quand les plus capricieuses oscillent jusqu'à 0,5 point. La régularité est géographiquement concentrée : la France représente à elle seule près de la moitié des 15 régions les plus stables, talonnée par l'Italie. Les régions les plus capricieuses sont dispersées sur plusieurs continents, ce qui suggère que la régularité est davantage liée à des pratiques viticoles ancrées qu'à un simple avantage climatique.
+
+---
+
+## Axe 5 — Climat et qualité : le cœur de la problématique
+
+### Q12 — Sur l'ensemble du calendrier climatique annuel, quels mois et quels indicateurs météo sont les plus associés à la note du vin ?
+
+On calcule le coefficient de Pearson entre `Rating` et chacune des 60 variables météo, puis on les représente sur une heatmap avec les mois en abscisse et les indicateurs en ordonnée. L'échelle de couleur divergente (bleu-blanc-rouge) est adaptée car la corrélation a un point neutre naturel en 0.
+
+```{r q12_heatmap_meteo, fig.width=11, fig.height=5}
+wines_q12 <- wines %>% filter(NumberOfRatings >= 100, !is.na(Rating))
+
+month_levels     <- c("Jan","Feb","Mar","Apr","May","Jun",
+                      "Jul","Aug","Sep","Oct","Nov","Dec")
+indicator_levels <- c("tavg","tmin","tmax","prcp","tsun")
+indicator_labels <- c("T moy.","T min.","T max.","Precip.","Ensoleil.")
+
+weather_cols <- names(wines_q12)[
+  grepl(paste0("^(", paste(month_levels, collapse="|"), ")_",
+               "(", paste(indicator_levels, collapse="|"), ")$"),
+        names(wines_q12))
+]
+
+cor_vals <- sapply(weather_cols, function(col) {
+  cor(wines_q12[[col]], wines_q12$Rating, use = "pairwise.complete.obs")
+})
+
+cor_df <- tibble(var = names(cor_vals), correlation = cor_vals) %>%
+  mutate(
+    month     = factor(str_extract(var, "^[A-Za-z]+"),
+                       levels = month_levels),
+    indicator = factor(str_extract(var, "[a-z]+$"),
+                       levels = indicator_levels,
+                       labels = indicator_labels)
+  ) %>%
+  filter(!is.na(month), !is.na(indicator))
+
+ggplot(cor_df, aes(x = month, y = indicator, fill = correlation)) +
+  geom_tile(color = "white", linewidth = 0.5) +
+  geom_text(aes(label = sprintf("%.2f", correlation)), size = 2.8) +
+  scale_fill_gradient2(
+    low = "#2166ac", mid = "white", high = "#d73027",
+    midpoint = 0, limits = c(-0.3, 0.3),
+    name = "Correlation\n(Pearson)"
+  ) +
+  labs(
+    title    = "Corrélations entre variables météo mensuelles et note du vin",
+    subtitle = "Coefficient de Pearson entre Rating et les 60 indicateurs climatiques (vins au moins 100 avis)",
+    x        = "Mois",
+    y        = "Indicateur"
+  ) +
+  theme_minimal(base_size = 11) +
+  theme(
+    plot.title    = element_text(face = "bold", size = 13),
+    plot.subtitle = element_text(size = 10, color = "grey40"),
+    panel.grid    = element_blank()
+  )
+```
+
+**Analyse**
+
+Le signal le plus clair est celui de l'ensoleillement estival (juin-août), positivement corrélé avec la note jusqu'à r = 0,14 en juillet, cohérent avec le cycle de maturation des raisins. Les températures estivales suivent la même direction. En revanche, les précipitations estivales ne montrent aucune corrélation négative : leurs coefficients sont quasi nuls sur juin-septembre, ce qui contredit l'idée reçue que la pluie d'été nuit systématiquement à la note. Un résultat plus inattendu ressort également : les variables hivernales sont négativement corrélées avec la note, signifiant que les régions aux hivers froids tendent à produire de meilleurs vins, un signal que l'on explorera en Q15.
+
+---
+
+### Q13 — L'ensoleillement estival prédit-il mieux la note que l'ensoleillement printanier, et cet effet varie-t-il selon le type de vin ?
+
+On construit `tsun_print` (moyenne avril-juin) et `tsun_ete` (moyenne juillet-septembre), puis on superpose les deux droites de régression sur le même graphique facetté par type. La couleur distingue les deux saisons, encodant une variable nominale ordinale (printemps vs été) par teinte, ce qui est adapté pour une distinction catégorielle.
+
+```{r q13_ensoleillement_saisons, fig.width=11, fig.height=6}
+wines_q13 <- wines %>%
+  filter(NumberOfRatings >= 100, !is.na(Rating),
+         !is.na(Apr_tsun), !is.na(May_tsun), !is.na(Jun_tsun),
+         !is.na(Jul_tsun), !is.na(Aug_tsun), !is.na(Sep_tsun)) %>%
+  mutate(
+    tsun_print = (Apr_tsun + May_tsun + Jun_tsun) / 3,
+    tsun_ete   = (Jul_tsun + Aug_tsun + Sep_tsun) / 3
+  ) %>%
+  pivot_longer(cols = c(tsun_print, tsun_ete),
+               names_to  = "saison",
+               values_to = "tsun") %>%
+  mutate(saison = factor(saison,
+                          levels = c("tsun_print","tsun_ete"),
+                          labels = c("Printemps (avr-juin)","Ete (jul-sep)")))
+
+ggplot(wines_q13, aes(x = tsun, y = Rating, color = saison)) +
+  geom_smooth(method = "lm", se = TRUE, linewidth = 1) +
+  scale_color_manual(values = c("#2ca25f","#e6550d"), name = "Saison") +
+  facet_wrap(~type, ncol = 2) +
+  labs(
+    title    = "Ensoleillement printanier vs estival et note du vin",
+    subtitle = "Droites de régression par saison et type (vins au moins 100 avis)",
+    x        = "Ensoleillement moyen (secondes/jour)",
+    y        = "Note (Rating)"
+  ) +
+  theme_bw(base_size = 10) +
+  theme(
+    plot.title    = element_text(face = "bold", size = 13),
+    plot.subtitle = element_text(size = 10, color = "grey40"),
+    legend.position = "bottom",
+    strip.text    = element_text(face = "bold")
+  )
+```
+
+**Analyse**
+
+L'ensoleillement prédit bien la note, et printemps et été se comportent de façon très similaire pour trois types sur quatre : les deux droites de régression sont quasiment superposées pour les rouges, les effervescents et les blancs. Seuls les rosés montrent une différence visible entre les deux saisons, mais le large intervalle de confiance invite à la prudence. Ce qui ressort plus clairement est que les effervescents sont les plus sensibles à l'ensoleillement quelle que soit la saison, tandis que les blancs y sont quasi insensibles.
+
+---
+
+### Q14 — Les précipitations estivales ont-elles un effet négatif sur la note des vins effervescents, et comment cet effet se compare-t-il aux autres types ?
+
+On construit `prcp_ete` (somme juillet-septembre) et on trace la relation avec `Rating` par type via une courbe loess, qui ne suppose pas de linearite et peut capturer des effets seuil.
+
+```{r q14_precipitations_ete, fig.width=11, fig.height=6}
+wines_q14 <- wines %>%
+  filter(NumberOfRatings >= 100, !is.na(Rating),
+         !is.na(Jul_prcp), !is.na(Aug_prcp), !is.na(Sep_prcp)) %>%
+  mutate(prcp_ete = Jul_prcp + Aug_prcp + Sep_prcp)
+
+ggplot(wines_q14, aes(x = prcp_ete, y = Rating)) +
+  geom_point(alpha = 0.15, size = 0.8, color = "steelblue") +
+  geom_smooth(method = "loess", se = TRUE, color = "black", linewidth = 0.9) +
+  facet_wrap(~type, ncol = 2, scales = "free_x") +
+  labs(
+    title    = "Précipitations estivales et note du vin",
+    subtitle = "Somme des précipitations juillet-septembre vs note (vins au moins 100 avis)",
+    x        = "Précipitations estivales (mm, jul-sep)",
+    y        = "Note (Rating)"
+  ) +
+  theme_bw(base_size = 10) +
+  theme(
+    plot.title    = element_text(face = "bold", size = 13),
+    plot.subtitle = element_text(size = 10, color = "grey40"),
+    strip.text    = element_text(face = "bold")
+  )
+```
+
+**Analyse**
+
+L'effet des précipitations estivales varie fortement selon le type. Les blancs montrent la relation négative la plus nette et la plus continue : la note décline progressivement à mesure que les précipitations augmentent. Les effervescents présentent un profil non-linéaire : la note se maintient voire progresse légèrement jusqu'à environ 5mm, puis chute clairement au-delà. Les rouges sont largement insensibles sur l'ensemble de la plage observée, et les rosés également. L'hypothèse d'un effet négatif uniforme n'est donc que partiellement vérifiée et c'est le blanc, non l'effervescent, qui y est le plus exposé.
+
+---
+
+### Q15 — Une température hivernale plus froide est-elle associée à de meilleures notes, particulièrement pour les vins blancs ?
+
+On construit `tavg_hiver` (moyenne décembre-février) et on trace la relation avec `Rating` pour chaque type via une régression linéaire.
+
+```{r q15_temperatures_hiver, fig.width=11, fig.height=6}
+wines_q15 <- wines %>%
+  filter(NumberOfRatings >= 100, !is.na(Rating),
+         !is.na(Dec_tavg), !is.na(Jan_tavg), !is.na(Feb_tavg)) %>%
+  mutate(tavg_hiver = (Dec_tavg + Jan_tavg + Feb_tavg) / 3)
+
+ggplot(wines_q15, aes(x = tavg_hiver, y = Rating)) +
+  geom_point(alpha = 0.15, size = 0.8, color = "steelblue") +
+  geom_smooth(method = "lm", se = TRUE, color = "black", linewidth = 0.9) +
+  facet_wrap(~type, ncol = 2) +
+  labs(
+    title    = "Températures hivernales et note du vin",
+    subtitle = "Température moyenne déc-fév vs note (vins au moins 100 avis)",
+    x        = "Température hivernale moyenne (degrés C)",
+    y        = "Note (Rating)"
+  ) +
+  theme_bw(base_size = 10) +
+  theme(
+    plot.title    = element_text(face = "bold", size = 13),
+    plot.subtitle = element_text(size = 10, color = "grey40"),
+    strip.text    = element_text(face = "bold")
+  )
+```
+
+**Analyse**
+
+Contrairement à l'hypothèse d'un effet faible, les températures hivernales ont un lien visible avec la note pour tous les types : plus l'hiver est froid, meilleure est la note. C'est chez les rouges et les blancs que la relation est la plus marquée. Ce résultat est cohérent avec le rôle agronomique de la dormance hivernale : un froid suffisant régule le cycle végétatif et prépare la vigne à une saison de croissance plus équilibrée. Combiné aux résultats de Q12, cela dessine un profil climatique favorable assez précis : hivers froids et étés ensoleillés.
+
+---
+
+## Axe 6 — Evolution climatique
+
+### Q16 — La hausse des températures estivales liée au réchauffement climatique est-elle visible dans les régions viticoles méditerranéennes entre 2005 et 2019 ?
+
+On filtre les régions entre 35 et 45 degrés de latitude nord et on trace l'évolution annuelle de la température estivale moyenne avec une droite de tendance linéaire.
+
+```{r q16_rechauffement, fig.width=10, fig.height=5}
+wines_q16 <- wines %>%
+  filter(!is.na(lat), !is.na(Year), lat >= 35, lat <= 45,
+         Year >= 2005, Year <= 2019,
+         !is.na(Jul_tavg), !is.na(Aug_tavg), !is.na(Sep_tavg)) %>%
+  mutate(tavg_ete = (Jul_tavg + Aug_tavg + Sep_tavg) / 3) %>%
+  group_by(Year) %>%
+  summarise(
+    mean_tavg = mean(tavg_ete, na.rm = TRUE),
+    se        = sd(tavg_ete, na.rm = TRUE) / sqrt(n()),
+    .groups   = "drop"
+  )
+
+ggplot(wines_q16, aes(x = Year, y = mean_tavg)) +
+  geom_ribbon(aes(ymin = mean_tavg - 1.96*se,
+                  ymax = mean_tavg + 1.96*se),
+              fill = "#fc8d59", alpha = 0.3) +
+  geom_line(color = "#d73027", linewidth = 1) +
+  geom_point(color = "#d73027", size = 2.2) +
+  geom_smooth(method = "lm", se = FALSE, color = "black",
+              linetype = "dashed", linewidth = 0.8) +
+  scale_x_continuous(breaks = seq(2005, 2019, by = 2)) +
+  labs(
+    title    = "Évolution des températures estivales dans les régions méditerranéennes (2005-2019)",
+    subtitle = "Température moyenne jul-sep pour les régions entre 35 et 45 degrés N",
+    x        = "Année",
+    y        = "Température estivale moyenne (degrés C)"
+  ) +
+  theme_bw() +
+  theme(
+    plot.title    = element_text(face = "bold", size = 13),
+    plot.subtitle = element_text(size = 10, color = "grey40")
+  )
+```
+
+**Analyse**
+
+La tendance linéaire confirme une hausse progressive des températures estivales sur la période, de l'ordre de 1,5 degré sur 15 ans dans les régions méditerranéennes. Ce signal est cohérent avec les données scientifiques sur le réchauffement climatique en zone méditerranéenne et valide la cohérence du dataset météorologique. Cette validation est importante pour la crédibilité des analyses des axes précédents : si le dataset capte correctement le signal climatique à long terme, les corrélations observées avec la note ont une base physique réelle, et non un artefact de mesure.
+
+---
+
+## Axe 7 — Structure et diversité du marché viticole
+
+### Q17 — Quel est le profil de diversité géographique de chaque type de vin, et comment cela se reflète-t-il dans leurs gammes de prix ?
+
+On représente chaque type dans un espace de diversité géographique via un scatter plot (position = nb pays × nb régions) et un bar chart complémentaire pour le prix médian.
+
+```{r q17_diversite_geo, fig.width=11, fig.height=6}
+type_diversity <- wines %>%
+  filter(!is.na(type), !is.na(Country), !is.na(Region), !is.na(Price), Price > 0) %>%
+  group_by(type) %>%
+  summarise(
+    n_countries = n_distinct(Country),
+    n_regions   = n_distinct(Region),
+    price_med   = median(Price, na.rm = TRUE),
+    .groups     = "drop"
+  )
+
+p_bubble <- ggplot(type_diversity,
+                   aes(x = n_countries, y = n_regions,
+                       fill = type, label = type)) +
+  geom_point(shape = 21, size = 10, alpha = 0.85) +
+  geom_text_repel(size = 3.8, show.legend = FALSE) +
+  scale_fill_brewer(palette = "Set1", guide = "none") +
+  labs(
+    title    = "Diversité géographique par type",
+    subtitle = "Position = diversité géographique (nb pays × nb régions)",
+    x        = "Nombre de pays",
+    y        = "Nombre de regions"
+  ) +
+  theme_bw() +
+  theme(plot.title    = element_text(face = "bold", size = 11),
+        plot.subtitle = element_text(size = 9, color = "grey40"))
+
+p_price <- ggplot(type_diversity,
+                  aes(x = reorder(type, price_med), y = price_med, fill = type)) +
+  geom_col(width = 0.6) +
+  geom_text(aes(label = paste0(round(price_med), "EUR")),
+            vjust = -0.3, size = 3.5) +
+  scale_fill_brewer(palette = "Set1", guide = "none") +
+  labs(title = "Prix médian par type", x = NULL, y = "Prix médian (EUR)") +
+  theme_bw() +
+  theme(plot.title = element_text(face = "bold", size = 11))
+
+p_bubble + p_price +
+  plot_annotation(
+    title = "Profil de diversité géographique et positionnement tarifaire par type",
+    theme = theme(plot.title = element_text(face = "bold", size = 13))
+  )
+```
+
+**Analyse**
+
+Les vins rouges dominent nettement en nombre de pays et de régions, reflétant leur présence mondiale. Les effervescents sont géographiquement les plus concentrés mais affichent le prix médian le plus élevé (35EUR), montrant qu'une niche géographique peut coexister avec un fort positionnement premium. Rosés et effervescents partagent un profil géographique similaire mais divergent fortement sur le prix. Cette asymétrie illustre que les différents types répondent à des logiques de marché distinctes : mondialisation pour les rouges, prestige de niche pour les effervescents.
+
+---
+
+### Q18 — La variabilité des notes au sein d'un même pays reflète-t-elle une hétérogénéité de production ou une richesse de terroirs ?
+
+On calcule l'écart-type des notes par pays (filtre 100 vins) et on trie par dispersion décroissante, en annotant la note moyenne pour lire simultanément qualité et régularité.
+
+```{r q18_variabilite_pays, fig.width=10, fig.height=7}
+wines_filtered <- wines %>% filter(NumberOfRatings >= 100)
+
+country_variability <- wines_filtered %>%
+  filter(!is.na(Country), !is.na(Rating)) %>%
+  group_by(Country) %>%
+  summarise(
+    n_wines     = n(),
+    mean_rating = mean(Rating, na.rm = TRUE),
+    std_rating  = sd(Rating, na.rm = TRUE),
+    .groups     = "drop"
+  ) %>%
+  filter(n_wines >= 100)
+
+ggplot(country_variability,
+       aes(x = std_rating, y = reorder(Country, std_rating), fill = mean_rating)) +
+  geom_col(width = 0.7) +
+  geom_text(aes(label = sprintf("moy=%.2f", mean_rating)),
+            x = 0.005, hjust = 0, size = 2.9,
+            color = "white", fontface = "bold") +
+  scale_fill_gradientn(
+    colours = c("#d73027","#fee08b","#1a9850"),
+    name    = "Note\nmoyenne",
+    limits  = c(3.5, 4.3)
+  ) +
+  labs(
+    title    = "Variabilité interne des notes par pays producteur",
+    subtitle = "Pays avec au moins 100 vins évalués (filtre 100 avis). Note moyenne annotée en blanc.",
+    x        = "Écart-type des notes",
+    y        = NULL
+  ) +
+  theme_bw() +
+  theme(
+    plot.title    = element_text(face = "bold", size = 13),
+    plot.subtitle = element_text(size = 10, color = "grey40")
+  )
+```
+
+**Analyse**
+
+Les pays les plus dispersés sont les pays du Nouveau Monde : Argentine, États-Unis, Chili et Australie affichent les plus grandes barres tout en ayant des notes moyennes dans la moyenne, signe d'une production à deux vitesses entre entrée de gamme et références premium. À l'inverse, les pays européens comme l'Allemagne, l'Autriche, la France et l'Italie combinent une dispersion plus faible et des notes moyennes plus élevées, signe d'une production plus homogène vers le haut. Cette double lecture montre que comparer les pays uniquement sur leur note moyenne masque des profils de marché très différents.
+
+---
+
+### Q19 — Quelles régions surperforment en note tout en restant moins chères que la moyenne du pays ?
+
+On calcule pour chaque région son écart à la note moyenne nationale et son écart au prix médian national. Le scatter plot positionne chaque région dans ce plan : le quadrant inférieur droit (ecart_note > 0, ecart_prix < 0) identifie les « pépites » — mieux notées ET moins chères que la moyenne nationale.
+
+```{r q19_pepites, fig.width=11, fig.height=7}
+wines_filtered <- wines %>% filter(NumberOfRatings >= 100)
+
+national_avg <- wines_filtered %>%
+  filter(!is.na(Country), !is.na(Rating), !is.na(Price), Price > 0) %>%
+  group_by(Country) %>%
+  summarise(
+    nat_rating_mean = mean(Rating, na.rm = TRUE),
+    nat_price_med   = median(Price, na.rm = TRUE),
+    .groups         = "drop"
+  )
+
+region_pepites <- wines_filtered %>%
+  filter(!is.na(Region), !is.na(Country), !is.na(Rating), !is.na(Price), Price > 0) %>%
+  group_by(Region, Country) %>%
+  summarise(
+    n_wines     = n(),
+    mean_rating = mean(Rating, na.rm = TRUE),
+    med_price   = median(Price, na.rm = TRUE),
+    .groups     = "drop"
+  ) %>%
+  filter(n_wines >= 15) %>%
+  left_join(national_avg, by = "Country") %>%
+  mutate(
+    ecart_note = mean_rating - nat_rating_mean,
+    ecart_prix = med_price   - nat_price_med
+  )
+
+pepites_label <- region_pepites %>%
+  filter(ecart_note > 0, ecart_prix < 0) %>%
+  slice_max(ecart_note, n = 10)
+
+ggplot(region_pepites, aes(x = ecart_note, y = ecart_prix)) +
+  annotate("rect", xmin = 0, xmax = Inf, ymin = -Inf, ymax = 0,
+           fill = "#27ae60", alpha = 0.07) +
+  geom_point(aes(color = Country), size = 2.5, alpha = 0.65) +
+  geom_text_repel(data = pepites_label, aes(label = Region),
+                  size = 2.8, max.overlaps = 20, show.legend = FALSE) +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "grey40") +
+  geom_hline(yintercept = 0, linetype = "dashed", color = "grey40") +
+  scale_color_manual(
+    values = colorRampPalette(brewer.pal(12, "Paired"))(n_distinct(region_pepites$Country)),
+    name = "Pays"
+  ) +
+  labs(
+    title    = "Régions surperformant en note tout en restant moins chères que la moyenne nationale",
+    subtitle = "Zone verte = mieux notées ET moins chères que la moyenne du pays (régions au moins 15 vins)",
+    x        = "Écart à la note nationale moyenne",
+    y        = "Écart au prix médian national (EUR)"
+  ) +
+  theme_bw() +
+  theme(
+    plot.title    = element_text(face = "bold", size = 12),
+    plot.subtitle = element_text(size = 9, color = "grey40"),
+    legend.position = "right"
+  )
+```
+
+**Analyse**
+
+La zone verte révèle plusieurs régions pépites qui combinent deux avantages : une note supérieure à la moyenne nationale et un prix inférieur au médian national. Ces terroirs d'excellence accessibles représentent une opportunité qualité/prix que le simple classement par note (Q4) n'aurait pas permis de détecter. Les régions identifiées sont dispersées sur plusieurs pays : Gigondas en France, Salento et Primitivo di Manduria en Italie, Toro et Rías Baixas en Espagne, Mosel en Allemagne ou encore Robertson en Afrique du Sud, ce qui montre que ces opportunités ne sont pas l'apanage d'une seule région du monde.
+
+---
+
+### Q20 — Le profil climatique annuel d'une région permet-il de prédire la régularité de sa production d'une année à l'autre ?
+
+Pour chaque région (au moins 5 millésimes), on calcule l'écart-type de la note annuelle et l'écart-type de la température estivale moyenne. Un scatter plot teste visuellement la corrélation entre stabilité climatique et régularité qualitative.
+
+```{r q20_stabilite_climatique, fig.width=11, fig.height=7}
+region_climate <- wines %>%
+  filter(!is.na(Region), !is.na(Year), !is.na(Rating),
+         NumberOfRatings >= 100,
+         !is.na(Jul_tavg), !is.na(Aug_tavg), !is.na(Sep_tavg)) %>%
+  mutate(tavg_ete = (Jul_tavg + Aug_tavg + Sep_tavg) / 3) %>%
+  group_by(Region, Year) %>%
+  summarise(
+    mean_rating_year = mean(Rating, na.rm = TRUE),
+    mean_tavg_year   = mean(tavg_ete, na.rm = TRUE),
+    .groups          = "drop"
+  ) %>%
+  group_by(Region) %>%
+  summarise(
+    n_years     = n(),
+    std_rating  = sd(mean_rating_year, na.rm = TRUE),
+    std_tavg    = sd(mean_tavg_year, na.rm = TRUE),
+    .groups     = "drop"
+  ) %>%
+  filter(n_years >= 5) %>%
+  left_join(
+    wines %>% distinct(Region, Country) %>%
+      group_by(Region) %>% slice(1),
+    by = "Region"
+  )
+
+extremes <- region_climate %>%
+  filter(std_rating > quantile(std_rating, 0.88, na.rm = TRUE) |
+         std_tavg   > quantile(std_tavg,   0.88, na.rm = TRUE))
+
+ggplot(region_climate, aes(x = std_tavg, y = std_rating)) +
+  geom_point(aes(color = Country), size = 2.5, alpha = 0.7) +
+  geom_smooth(method = "lm", se = TRUE, color = "black", linewidth = 0.9) +
+  geom_text_repel(data = extremes, aes(label = Region),
+                  size = 2.6, max.overlaps = 15, show.legend = FALSE) +
+  scale_color_manual(
+    values = colorRampPalette(brewer.pal(12, "Paired"))(n_distinct(region_climate$Country)),
+    name = "Pays"
+  ) +
+  labs(
+    title    = "Stabilité climatique et régularité de production par région",
+    subtitle = "Écart-type de la température estivale vs écart-type des notes (régions au moins 5 millésimes)",
+    x        = "Variabilité climatique (std température estivale, degrés C)",
+    y        = "Variabilité de production (std note annuelle)"
+  ) +
+  theme_bw() +
+  theme(
+    plot.title    = element_text(face = "bold", size = 13),
+    plot.subtitle = element_text(size = 10, color = "grey40"),
+    legend.position = "right"
+  )
+```
+
+**Analyse**
+
+La relation entre variabilité climatique et régularité de production est quasi inexistante : la droite de régression est pratiquement horizontale et le nuage ne montre aucune tendance claire. Des régions soumises à un climat très variable maintiennent une production régulière, et inversement. Cela suggère que le savoir-faire viticole compense largement les aléas climatiques. C'est finalement la conclusion la plus importante du projet : le climat influence la qualité, mais ne détermine pas la régularité, qui reste avant tout une affaire humaine.
+
+---
+
+# Conclusion
+
+Notre exploration de 13 090 vins issus de 30 pays, enrichis de 60 variables météorologiques, permet de dresser un bilan cohérent autour de la question centrale : les conditions climatiques permettent-elles de prédire la qualité d'un vin ?
+
+La réponse est nuancée. Le climat estival (températures et ensoleillement de mai à septembre) est bien corrélé avec la note, et le réchauffement climatique est perceptible dans les données sur 2005-2019. Mais le climat n'est qu'un des déterminants de la qualité perçue : le terroir régional, l'effet domaine du producteur, le type de vin et le positionnement tarifaire jouent tous un rôle comparable, parfois plus fort.
+
+Sur le plan commercial, le marché viticole se polarise entre une économie de volume (vins accessibles et très évalués, qualité moyenne) et une économie de prestige (vins rares, peu évalués, mais mieux notés). Des terroirs « pépites » existent, combinant qualité supérieure et prix raisonnables, principalement en Europe.
+
+**Difficultés rencontrées :** La forte asymétrie du dataset (8 658 rouges vs 279 effervescents) a limité la comparabilité entre types pour les analyses climatiques. L'absence de données sur les pratiques viticoles laisse une part de variance inexpliquée. La géolocalisation à l'échelle régionale masque les micro-climats.
+
+**Pistes d'extension :** Une régression multiple combinant variables climatiques, type et région permettrait de quantifier la contribution respective de chaque facteur. Une analyse par clustering des régions selon leur profil climatique serait également intéressante.
+
+---
+
+**Samuel FANDIO NJIKAM** : J'ai retenu l'importance du choix du graphique selon le type de variable et les principes de sémiologie graphique. Il aurait été intéressant d'explorer des modèles prédictifs pour quantifier l'impact combiné des variables climatiques.
+
+**Samella LEUKOUO** : J'ai retenu la valeur du data-to-ink ratio dans la conception de graphiques clairs et lisibles. Intégrer des données sur les pratiques de vinification aurait permis de mieux isoler l'effet climatique pur.
+
+**Mohamed Mehdi TRABELSSI** : J'ai retenu les principes de perception visuelle (Gestalt, pre-attentive processing) pour concevoir des graphiques plus lisibles. Une analyse de la sensibilité des cépages au changement climatique aurait complété nos résultats.
+
+---
+
+# Annexe — Répartition du travail
+
+| Membre | Parties réalisées |
+|--------|-------------------|
+| Samuel FANDIO NJIKAM | Introduction, Q2, Q6, Q7, Q9, Q12, Q16, Q19 et structure globale du rapport |
+| Samella LEUKOUO | Q1, Q3, Q4, Q8, Q10, Q13 |
+| Mohamed Mehdi TRABELSSI | Q5, Q11, Q14, Q15, Q17, Q18, Q20 |
+
