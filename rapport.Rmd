@@ -14,11 +14,6 @@ output:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
-knitr::knit_hooks$set(document = function(x) {
-  unlink("rapport_files", recursive = TRUE)
-  unlink(".Rhistory")
-  x
-})
 ```
 
 ```{css, echo=FALSE}
@@ -1540,7 +1535,7 @@ Sur le plan commercial, le marché viticole se polarise entre une économie de v
 
 | Membre | Parties réalisées |
 |--------|-------------------|
-| Samuel FANDIO NJIKAM | Introduction, Q2, Q6, Q7, Q9, Q12, Q16, Q19 et structure globale du rapport |
-| Samella LEUKOUO | Q1, Q3, Q4, Q8, Q10, Q13 |
+| Samuel FANDIO NJIKAM | Introduction, Q2, Q6, Q7, Q9, Q12, Q16, Q19, Shiny et structure globale du rapport |
+| Samella LEUKOUO | Q1, Q3, Q4, Q8, Q10, Q13 et Power BI |
 | Mohamed Mehdi TRABELSSI | Q5, Q11, Q14, Q15, Q17, Q18, Q20 |
 
