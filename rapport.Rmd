@@ -9,10 +9,16 @@ output:
     theme: flatly
     highlight: tango
     number_sections: false
+    self_contained: true
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
+knitr::knit_hooks$set(document = function(x) {
+  unlink("rapport_files", recursive = TRUE)
+  unlink(".Rhistory")
+  x
+})
 ```
 
 ```{css, echo=FALSE}
@@ -143,7 +149,7 @@ Pour chacun des **12 mois** (Jan à Dec), 5 indicateurs climatiques sont renseig
 
 ---
 
-### Plan d'analyse.
+# Plan d'analyse
 
 Notre analyse s'articule autour de **6 axes indépendants**, progressant du descriptif vers l'analytique et l'explicatif. Chaque question est conçue pour éclairer un aspect distinct du dataset, avec des variables, des graphiques et une approche propres.
 
@@ -1261,6 +1267,24 @@ p_bubble + p_price +
 
 Les vins rouges dominent nettement en nombre de pays et de régions, reflétant leur présence mondiale. Les effervescents sont géographiquement les plus concentrés mais affichent le prix médian le plus élevé (35EUR), montrant qu'une niche géographique peut coexister avec un fort positionnement premium. Rosés et effervescents partagent un profil géographique similaire mais divergent fortement sur le prix. Cette asymétrie illustre que les différents types répondent à des logiques de marché distinctes : mondialisation pour les rouges, prestige de niche pour les effervescents.
 
+**Comparaison avec Power BI**
+
+Nous avons également reproduit cette visualisation avec Power BI, en recréant le scatter plot de diversité géographique et le bar chart du prix médian par type.
+
+```{r, echo=FALSE, out.width='80%', fig.align='center'}
+knitr::include_graphics("powerbi/question17_scatter.png")
+```
+
+```{r, echo=FALSE, out.width='80%', fig.align='center'}
+knitr::include_graphics("powerbi/question17_prix.png")
+```
+
+Les graphiques réalisés avec Power BI confirment les résultats obtenus avec R : les vins rouges et blancs présentent la plus grande diversité géographique (environ 30 pays), tandis que les rosés et effervescents restent plus concentrés. Le classement des prix médians est identique, avec les effervescents en tête (35 EUR) et les rosés en bas (9 EUR).
+
+La différence principale réside dans la manière de produire la visualisation. Avec R, la composition des deux graphiques côte à côte via `patchwork`, le positionnement des étiquettes et les choix esthétiques sont entièrement contrôlés par le code, ce qui rend l'analyse reproductible et facilement modifiable. Avec Power BI, ces mêmes graphiques sont construits par glisser-déposer dans l'interface, ce qui permet une exploration rapide et interactive sans écrire de code.
+
+Cette comparaison montre que les deux outils aboutissent aux mêmes conclusions sur les profils de diversité géographique et de positionnement tarifaire. R est plus adapté pour une analyse reproductible et personnalisée, tandis que Power BI est plus pratique pour explorer visuellement les données et tester rapidement différentes représentations.
+
 ---
 
 ### Q18 — La variabilité des notes au sein d'un même pays reflète-t-elle une hétérogénéité de production ou une richesse de terroirs ?
@@ -1439,6 +1463,54 @@ ggplot(region_climate, aes(x = std_tavg, y = std_rating)) +
 **Analyse**
 
 La relation entre variabilité climatique et régularité de production est quasi inexistante : la droite de régression est pratiquement horizontale et le nuage ne montre aucune tendance claire. Des régions soumises à un climat très variable maintiennent une production régulière, et inversement. Cela suggère que le savoir-faire viticole compense largement les aléas climatiques. C'est finalement la conclusion la plus importante du projet : le climat influence la qualité, mais ne détermine pas la régularité, qui reste avant tout une affaire humaine.
+
+---
+
+# Application Shiny
+
+## Objectif
+
+Afin de compléter les analyses statiques réalisées avec ggplot2, nous avons développé une application Shiny interactive permettant d'explorer les données de manière dynamique. L'utilisateur peut filtrer les données selon le type de vin, la période, le pays ou la région étudiée et visualiser instantanément les résultats obtenus.
+
+Les captures d'écran présentées dans cette partie proviennent de l'application Shiny développée dans les fichiers `ui.R` et `server.R`. Ces figures ne sont donc pas générées directement dans le rapport RMarkdown, mais illustrent les visualisations interactives que l'utilisateur peut explorer dans l'application.
+
+## Interface générale
+
+```{r shiny-interface, echo=FALSE, out.width="90%", fig.align='center'}
+knitr::include_graphics("shiny/shiny_interface.png")
+```
+
+L'application est organisée autour de 20 visualisations interactives correspondant aux 20 questions du rapport, accessibles depuis un menu latéral structuré par axe d'analyse. La page d'accueil présente les statistiques clés du dataset (13 090 vins, 30 pays, 1 236 régions) et le plan d'analyse en 7 axes. Plusieurs filtres permettent de personnaliser chaque analyse selon les besoins de l'utilisateur, notamment en sélectionnant un type de vin, une période ou un seuil minimal.
+
+## Visualisation interactive : Prix vs Note (Q3)
+
+```{r shiny-prix-note, echo=FALSE, out.width="90%", fig.align='center'}
+knitr::include_graphics("shiny/shiny_prix_note.png")
+```
+
+Cette visualisation permet d'explorer la corrélation entre le prix et la note pour chaque type de vin. Les filtres offrent la possibilité de sélectionner les types à afficher, d'activer ou non la droite de régression, et de filtrer les vins ayant un minimum d'évaluations. Les coefficients de corrélation sont affichés dynamiquement.
+
+## Visualisation interactive : Carte mondiale et latitude (Q9)
+
+```{r shiny-carte, echo=FALSE, out.width="90%", fig.align='center'}
+knitr::include_graphics("shiny/shiny_carte.png")
+```
+
+L'onglet Q9 propose une carte Leaflet interactive des régions viticoles, colorées selon leur note moyenne, ainsi qu'un scatter plot latitude vs note. L'utilisateur peut zoomer, survoler les régions pour obtenir leurs informations, et ajuster le seuil minimal de vins par région.
+
+## Visualisation interactive : Heatmap météo (Q12)
+
+```{r shiny-heatmap, echo=FALSE, out.width="90%", fig.align='center'}
+knitr::include_graphics("shiny/shiny_heatmap.png")
+```
+
+Ce graphique interactif présente la matrice de corrélation entre les variables météorologiques mensuelles et la note des vins. L'utilisateur peut sélectionner les types de vin et les indicateurs météo à inclure, ce qui permet d'identifier rapidement les périodes et variables les plus associées à la qualité.
+
+## Apport de l'interactivité
+
+L'application Shiny apporte une dimension interactive aux analyses présentées dans ce rapport. Elle permet à l'utilisateur d'explorer librement les données, de filtrer les observations et d'obtenir une vision plus détaillée des phénomènes observés.
+
+Par rapport aux visualisations statiques du rapport, l'application permet de modifier les paramètres d'analyse sans régénérer le rapport à chaque fois. Elle complète donc le rapport en facilitant l'exploration de sous-groupes de données et la vérification d'hypothèses en temps réel. L'utilisation de Plotly rend chaque graphique survol-able et zoomable, tandis que la carte Leaflet offre une exploration géographique intuitive.
 
 ---
 

@@ -313,8 +313,19 @@ server <- function(input, output, session) {
       scale_color_gradientn(colours=c("#d73027","#fee08b","#1a9850"), guide="none") +
       labs(title="Latitude vs note moyenne par région",
            x="Latitude (degrés N)", y="Note moyenne") + theme_bw()
-    if (input$q9_reg)
-      p <- p + geom_smooth(method="lm", se=TRUE, color="black", linewidth=.9)
+    if (input$q9_reg) {
+      lm_fit  <- lm(mean_r ~ lat, data=df)
+      x_seq   <- seq(min(df$lat, na.rm=TRUE), max(df$lat, na.rm=TRUE), length.out=100)
+      lm_pred <- predict(lm_fit, newdata=data.frame(lat=x_seq),
+                         interval="confidence", level=.95)
+      lm_df   <- data.frame(lat=x_seq, mean_r=lm_pred[,"fit"],
+                            lo=lm_pred[,"lwr"], hi=lm_pred[,"upr"])
+      p <- p +
+        geom_ribbon(data=lm_df, aes(x=lat, ymin=lo, ymax=hi),
+                    fill="grey70", alpha=.35, inherit.aes=FALSE) +
+        geom_line(data=lm_df, aes(x=lat, y=mean_r),
+                  color="black", linewidth=.9, inherit.aes=FALSE)
+    }
     ggplotly(p, tooltip="text")
   })
   
@@ -533,10 +544,12 @@ server <- function(input, output, session) {
       mutate(en=mr-nm, ep=mp-np)
     pal <- colorRampPalette(brewer.pal(12,"Paired"))(n_distinct(df$Country))
     pep <- df %>% filter(en>0, ep<0) %>% slice_max(en, n=12)
+    x_max <- max(df$en, na.rm=TRUE) * 1.1
+    y_min <- min(df$ep, na.rm=TRUE) * 1.1
     p <- ggplot(df, aes(x=en, y=ep, color=Country,
                         text=paste0(Region," (",Country,")<br>Δnote: ",round(en,3),
                                     "<br>Δprix: ",round(ep,0),"€<br>N: ",n))) +
-      annotate("rect", xmin=0, xmax=Inf, ymin=-Inf, ymax=0, fill="#27ae60", alpha=.07) +
+      annotate("rect", xmin=0, xmax=x_max, ymin=y_min, ymax=0, fill="#27ae60", alpha=.07) +
       geom_point(size=2.5, alpha=.65) +
       geom_text_repel(data=pep, aes(label=Region), size=2.7, show.legend=FALSE,
                       max.overlaps=20) +
