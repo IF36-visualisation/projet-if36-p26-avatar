@@ -7,8 +7,7 @@
 | L'équipe Avatar         |
 | --------------------    |
 | Samuel FANDIO NJIKAM    |
-| Samella LEUKOUO         |  
-| Fanta DEMBELE           |
+| Samella LEUKOUO         |
 | Mohamed Mehdi TRABELSSI |
 
 ---
@@ -138,9 +137,9 @@ Notre analyse s'articule autour de **7 axes indépendants**, progressant du desc
 
 **Variables :** `Region`, `Country`, `Rating`, `NumberOfRatings`
 
-**Graphique :** Bar chart horizontal des 20 régions avec la note moyenne la plus élevée, filtré sur les régions comptant au moins 30 vins évalués, coloré par `Country`
+**Graphique :** Lollipop chart horizontal des 20 régions avec la note moyenne la plus élevée, filtré sur les régions comptant au moins 20 vins évalués, coloré par `Country`
 
-**Approche :** On agrège le dataset par région pour calculer la note moyenne et le nombre de vins. On filtre les régions avec trop peu d'observations (seuil défini à partir de Q2) pour éviter les régions anecdotiques. Le bar chart horizontal permet de lire facilement les noms de régions souvent longs, et la couleur par pays révèle si les meilleures régions sont concentrées dans un même pays ou dispersées géographiquement.
+**Approche :** On agrège le dataset par région pour calculer la note moyenne et le nombre de vins. On filtre les régions avec trop peu d'observations (seuil ≥ 20 vins, défini à partir de Q2) pour éviter les régions anecdotiques. Le lollipop chart est privilégié au bar chart car les valeurs s'échelonnent entre 3,99 et 4,37 — un bar chart depuis 0 rendrait les différences invisibles, et un bar chart tronqué introduirait un Lie Factor. Le dot encode la position (canal perceptuel le plus précis), et la couleur par pays révèle si les meilleures régions sont concentrées dans un même pays ou dispersées géographiquement.
 
 ##### Q5 — Certains producteurs se distinguent-ils par une note systématiquement supérieure à celle de leur région ?
  
@@ -156,7 +155,7 @@ Notre analyse s'articule autour de **7 axes indépendants**, progressant du desc
  
 **Objectif :** Explorer la relation entre positionnement tarifaire (`Price`) et popularité (`NumberOfRatings`), puis observer comment la note se distribue dans ces deux dimensions.
  
-**Variables :** `Price`, `NumberOfRating`, `Rating`, `type`
+**Variables :** `Price`, `NumberOfRatings`, `Rating`, `type`
  
 **Graphique :** Scatter plot `log(Price)` vs `log(NumberOfRatings)`, coloré par `Rating`, avec lignes médianes délimitant 4 quadrants, facetté par `type`
  
@@ -170,9 +169,9 @@ Notre analyse s'articule autour de **7 axes indépendants**, progressant du desc
  
 **Objectif :** Comparer les grands pays producteurs (12 pays avec ≥ 100 vins) sur leur positionnement simultané en note et en prix. Cette question adopte une granularité nationale, qui revèle des stratégies de marché différentes : la France produit cher (médiane 27€) là où le Portugal produit abordable (11€) pour des notes similaires.
  
-**Variables :** `Country`, `Rating`, `Price`, `type`
- 
-**Graphique :** Scatter plot des pays (`price_med` en x, `rating_med` en y), avec des points dimensionnés par nombre de vins et colorés par continent, avec annotation des noms de pays
+**Variables :** `Country`, `Rating`, `Price` — variable construite : `Continent`
+
+**Graphique :** Scatter plot des pays (`price_med` en x, `rating_med` en y), coloré par continent, avec annotation des noms de pays
  
 **Approche :** On agrège par pays (filtre ≥ 100 vins, 12 pays exploitables). Chaque pays devient un point sur le graphique prix/note. On identifiera les pays à fort rapport qualité/prix (Portugal, Espagne, Chili) vs. les pays premium (France, États-Unis).
  
@@ -190,11 +189,11 @@ Notre analyse s'articule autour de **7 axes indépendants**, progressant du desc
  
 **Objectif :** Explorer si la position géographique d'une région (qui détermine structurellement son ensoleillement et ses températures moyennes) est associée à la qualité moyenne des vins produits, indépendamment des variations annuelles.
  
-**Variables :** `lat`, `lng`, `Rating`, `Country`, `type`
+**Variables :** `lat`, `lng`, `Rating`, `NumberOfRatings`
+
+**Graphique :** Carte géographique (`ggplot2` + `geom_point`) où chaque région est positionnée par `lat`/`lng`, colorée par note moyenne ; complétée d'un scatter plot `lat` vs `Rating` avec droite de régression
  
-**Graphique :** Carte géographique (`ggplot2` + `geom_point`) où chaque région est positionnée par `lat`/`lng`, colorée par note moyenne et dimensionnée par nombre de vins ; complétée d'un scatter plot `lat` vs `Rating` avec droite de régression
- 
-**Approche :** On agrège les données par région pour obtenir la note moyenne et le nombre de vins. On projette chaque région sur une carte du monde pour révéler des patterns spatiaux visuels. Le scatter plot complémentaire `lat` vs `Rating` quantifie la tendance. On contrôle par `type` pour isoler l'effet de la latitude de celui du type de vin produit dans chaque zone.
+**Approche :** On agrège les données par région pour obtenir la note moyenne et le nombre de vins (filtre ≥ 10 vins par région). On projette chaque région sur une carte du monde pour révéler des patterns spatiaux visuels. Le scatter plot complémentaire `lat` vs note moyenne quantifie la tendance et ajoute une droite de régression pour mesurer l'effet de la latitude.
  
 ---
 
@@ -242,7 +241,7 @@ Notre analyse s'articule autour de **7 axes indépendants**, progressant du desc
 
 **Graphique :** Scatter plot facetté par `type` avec deux courbes `geom_smooth` superposées — une pour `tsun_print` (printemps) et une pour `tsun_ete` (été) — colorées différemment
 
-**Approche :** On construit `tsun_print` (moyenne avril-juin) et `tsun_ete` (moyenne juillet-septembre). On trace les deux relations sur le même graphique par type. La comparaison des pentes révèle quelle période compte le plus pour chaque type de vin. Les effervescents devraient montrer un printemps plus déterminant, contrairement aux rouges.
+**Approche :** On construit `tsun_print` (moyenne avril-juin) et `tsun_ete` (moyenne juillet-septembre). On trace les deux relations sur le même graphique par type. La comparaison des pentes révèle quelle période compte le plus pour chaque type de vin. On s'attend à ce que l'été soit plus déterminant, bien que les deux saisons puissent se révéler similaires selon le type.
 
 ##### Q14 — Les précipitations estivales ont-elles un effet négatif sur la note des vins effervescents, et comment cet effet se compare-t-il aux autres types ?
 
@@ -288,17 +287,17 @@ Notre analyse s'articule autour de **7 axes indépendants**, progressant du desc
  
 **Variables :** `type`, `Country`, `Region`, `Price`
  
-**Graphique :** Graphique à bulles (`geom_point`) avec le nombre de pays en x, le nombre de régions en y, la taille des bulles proportionnelle au prix médian, et la couleur encodant le type ; complété d'un bar chart des prix médians par type
+**Graphique :** Scatter plot avec le nombre de pays en x, le nombre de régions en y, la couleur encodant le type (points de taille fixe — la diversité géographique est encodée par la position x/y) ; complété d'un bar chart horizontal des prix médians par type (encodage par longueur)
  
-**Approche :** On agrège par type pour obtenir le nombre de pays distincts, de régions distinctes et le prix médian. Le graphique à bulles positionne chaque type dans l'espace diversité/concentration.
+**Approche :** On agrège par type pour obtenir le nombre de pays distincts, de régions distinctes et le prix médian. Le scatter plot positionne chaque type dans l'espace diversité (nb pays × nb régions) ; le bar chart complémentaire lit le prix médian par longueur, encodage perceptuellement supérieur à la taille des bulles.
 
 ##### Q18 — La variabilité des notes au sein d'un même pays reflète-t-elle une hétérogénéité de production ou une richesse de terroirs ?
  
 **Objectif :** Comparer les pays non sur leur note moyenne (comme en Q7) mais sur leur *dispersion* interne (`std` des notes). Un pays avec une forte dispersion produit à la fois de très bons et de très mauvais vins (profil hétérogène), tandis qu'un pays homogène maintient un niveau constant.
  
-**Variables :** `Country`, `Rating`, `type`
- 
-**Graphique :** Bar chart horizontal des pays (≥ 100 vins) classés par écart-type des notes, avec la note moyenne annotée sur chaque barre, coloré par continent
+**Variables :** `Country`, `Rating`
+
+**Graphique :** Bar chart horizontal des pays (≥ 100 vins) classés par écart-type des notes, avec la note moyenne annotée sur chaque barre, la couleur encodant la note moyenne (gradient séquentiel)
  
 **Approche :** On calcule la note moyenne et l'écart-type par pays. On trie par écart-type décroissant. On annote la note moyenne sur chaque barre pour lire simultanément qualité moyenne et régularité. Les pays "surprises" (bonne moyenne + forte dispersion) seront les plus intéressants à commenter.
 
@@ -310,7 +309,7 @@ Notre analyse s'articule autour de **7 axes indépendants**, progressant du desc
  
 **Graphique :** Scatter plot des régions (≥ 15 vins) avec `ecart_note_pays` en x et `ecart_prix_pays` en y, annoté pour les régions dans le quadrant "mieux notées + moins chères", coloré par `Country`
  
-**Approche :** Pour chaque région, on calcule l'écart à la note moyenne nationale et l'écart au prix médian national. On projette chaque région sur le plan (écart_note, écart_prix). Le quadrant supérieur gauche (meilleure note, prix inférieur) identifie les pépites.
+**Approche :** Pour chaque région, on calcule l'écart à la note moyenne nationale et l'écart au prix médian national. On projette chaque région sur le plan (écart_note, écart_prix). Le quadrant inférieur droit (écart_note > 0, écart_prix < 0 : meilleure note ET moins cher) identifie les pépites.
 
 ##### Q20 — Le profil climatique annuel d'une région permet-il de prédire la régularité de sa production d'une année à l'autre ?
  
